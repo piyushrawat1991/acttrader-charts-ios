@@ -1,0 +1,27 @@
+name: Sync chart.html
+
+on:
+  repository_dispatch:
+    types: [stockchart-release]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download chart.html
+        run: |
+          curl -L "${{ github.event.client_payload.chart_html_url }}" \
+            -o Sources/ActtraderCharts/Resources/chart.html
+
+      - name: Open PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "chore: sync chart.html v${{ github.event.client_payload.version }}"
+          branch: "chore/sync-chart-${{ github.event.client_payload.version }}"
+          commit-message: "chore: update bundled chart.html to v${{ github.event.client_payload.version }}"
+          body: |
+            Automated sync from acttrader/stockchart release v${{ github.event.client_payload.version }}.
+
+            Please review and merge to ship the updated chart bundle.

@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v6
 
@@ -24,16 +23,12 @@ jobs:
         run: |
           sed -i "s/s\.version\s*=\s*'[^']*'/s.version          = '${{ github.event.client_payload.version }}'/" ActtraderCharts.podspec
 
-      - name: Open PR
-        uses: peter-evans/create-pull-request@v7
-        with:
-          title: "chore: sync chart.html v${{ github.event.client_payload.version }}"
-          branch: "chore/sync-chart-${{ github.event.client_payload.version }}"
-          commit-message: "chore: update bundled chart.html to v${{ github.event.client_payload.version }}"
-          body: |
-            Automated sync from acttrader-charts release v${{ github.event.client_payload.version }}.
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: update bundled chart.html to v${{ github.event.client_payload.version }}"
 
-            **Source:** ${{ github.event.client_payload.chart_html_url }}
-
-            Please review and merge to ship the updated chart bundle.
-            After merging, push a matching tag (`v${{ github.event.client_payload.version }}`) to trigger publish.
+      - name: Push to main
+        run: git push origin HEAD:main

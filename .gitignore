@@ -1,0 +1,22 @@
+# Swift Package Manager
+.build/
+.swiftpm/xcode/
+*.xcodeproj
+
+# Xcode
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.moved-aside
+*.xccheckout
+
+# CocoaPods
+Pods/
+*.xcworkspace
+
+# macOS
+.DS_Store
+
+# Test coverage
+*.profdata
+*.profraw

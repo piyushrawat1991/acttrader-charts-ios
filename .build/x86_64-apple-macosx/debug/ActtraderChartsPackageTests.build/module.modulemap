@@ -1,0 +1,4 @@
+module ActtraderChartsPackageTests {
+    header "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderChartsPackageTests.build/ActtraderChartsPackageTests-Swift.h"
+    requires objc
+}

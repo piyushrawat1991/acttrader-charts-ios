@@ -1,0 +1,41 @@
+{
+  "": {
+    "swift-dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/master.swiftdeps"
+  },
+  "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/Sources/ActtraderCharts/ActtraderChartsView.swift": {
+    "dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/ActtraderChartsView.d",
+    "object": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/ActtraderChartsView.swift.o",
+    "swiftmodule": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/ActtraderChartsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/ActtraderChartsView.swiftdeps"
+  },
+  "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/Sources/ActtraderCharts/BridgeCommand.swift": {
+    "dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/BridgeCommand.d",
+    "object": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/BridgeCommand.swift.o",
+    "swiftmodule": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/BridgeCommand~partial.swiftmodule",
+    "swift-dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/BridgeCommand.swiftdeps"
+  },
+  "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/Sources/ActtraderCharts/BridgeEvent.swift": {
+    "dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/BridgeEvent.d",
+    "object": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/BridgeEvent.swift.o",
+    "swiftmodule": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/BridgeEvent~partial.swiftmodule",
+    "swift-dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/BridgeEvent.swiftdeps"
+  },
+  "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/Sources/ActtraderCharts/OHLCVBar.swift": {
+    "dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/OHLCVBar.d",
+    "object": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/OHLCVBar.swift.o",
+    "swiftmodule": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/OHLCVBar~partial.swiftmodule",
+    "swift-dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/OHLCVBar.swiftdeps"
+  },
+  "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/Sources/ActtraderCharts/WeakScriptMessageHandler.swift": {
+    "dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/WeakScriptMessageHandler.d",
+    "object": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/WeakScriptMessageHandler.swift.o",
+    "swiftmodule": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/WeakScriptMessageHandler~partial.swiftmodule",
+    "swift-dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/WeakScriptMessageHandler.swiftdeps"
+  },
+  "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/DerivedSources/resource_bundle_accessor.swift": {
+    "dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/resource_bundle_accessor.d",
+    "object": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/resource_bundle_accessor.swift.o",
+    "swiftmodule": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/resource_bundle_accessor~partial.swiftmodule",
+    "swift-dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderCharts.build/resource_bundle_accessor.swiftdeps"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "": {
+    "swift-dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderChartsTests.build/master.swiftdeps"
+  },
+  "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/Tests/ActtraderChartsTests/ActtraderChartsViewTests.swift": {
+    "dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderChartsTests.build/ActtraderChartsViewTests.d",
+    "object": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderChartsTests.build/ActtraderChartsViewTests.swift.o",
+    "swiftmodule": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderChartsTests.build/ActtraderChartsViewTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/piyush/Documents/Projects/ChartingLibrary/acttrader-charts-ios/.build/x86_64-apple-macosx/debug/ActtraderChartsTests.build/ActtraderChartsViewTests.swiftdeps"
+  }
+}

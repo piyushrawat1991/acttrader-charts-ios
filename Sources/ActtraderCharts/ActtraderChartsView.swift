@@ -288,7 +288,7 @@ public class ActtraderChartsView: UIView {
         let bundle = Bundle(for: ActtraderChartsView.self)
         #endif
 
-        guard let url = bundle.url(forResource: "chart", withExtension: "html", subdirectory: "Resources") else {
+        guard let url = bundle.url(forResource: "chart", withExtension: "html") else {
             assertionFailure("chart.html not found in ActtraderCharts bundle. Run the sync workflow first.")
             return
         }

@@ -17,7 +17,7 @@ let package = Package(
         .target(
             name: "ActtraderCharts",
             resources: [
-                .copy("Resources/chart.html"),
+                .process("Resources"),
             ]
         ),
         .testTarget(

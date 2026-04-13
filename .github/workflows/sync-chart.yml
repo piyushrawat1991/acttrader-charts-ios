@@ -13,10 +13,13 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download chart.html
+        env:
+          GH_TOKEN: ${{ secrets.CHARTS_REPO_PAT }}
         run: |
-          curl -L --fail \
-            "${{ github.event.client_payload.chart_html_url }}" \
-            -o Sources/ActtraderCharts/Resources/chart.html
+          gh release download "v${{ github.event.client_payload.version }}" \
+            --repo piyushrawat1991/acttrader-charts \
+            --pattern "chart.html" \
+            --output Sources/ActtraderCharts/Resources/chart.html
 
       - name: Bump version in podspec
         run: |

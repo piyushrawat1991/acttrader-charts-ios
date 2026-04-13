@@ -15,7 +15,7 @@ iOS Swift framework that embeds the ActTrader financial charting library inside 
 Add to your `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/acttrader/acttrader-charts-ios.git", from: "0.1.0")
+.package(url: "https://github.com/piyushrawat1991/acttrader-charts-ios.git", from: "0.1.0")
 ```
 
 Or in Xcode: **File → Add Package Dependencies…** and enter the repo URL.

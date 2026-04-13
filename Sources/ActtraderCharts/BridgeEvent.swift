@@ -1,5 +1,15 @@
 import Foundation
 
+/// A single change within a `tradeLevelEdit` event.
+public struct TradeLevelChange {
+    /// Which field changed: `"MAIN"`, `"SL"`, `"TP"`, `"ADD_SL"`, `"ADD_TP"`, `"REMOVE_SL"`, `"REMOVE_TP"`.
+    public let field: String
+    public let newPrice: Double
+    /// Opaque level data serialised as a raw JSON string.
+    public let data: String
+    public let bracketOrderLabel: String?
+}
+
 /// Events emitted from the chart WebView back to native iOS code.
 public enum BridgeEvent {
 
@@ -41,6 +51,21 @@ public enum BridgeEvent {
 
     /// User submitted an order via the floating trade button.
     case placeOrder(price: Double, side: String, orderType: String)
+
+    /// User tapped × to close or cancel a trade level or remove a bracket.
+    case tradeLevelClose(label: String, type: String, action: String, data: String, bracketType: String?, isFullscreen: Bool)
+
+    /// Live drag position — fires on every pointer move while a level or bracket is being dragged.
+    case tradeLevelDrag(label: String, newPrice: Double, data: String, bracketType: String?, isFullscreen: Bool)
+
+    /// User confirmed edits to a trade level (main price, SL, TP, or bracket changes batched together).
+    case tradeLevelEdit(label: String, type: String, data: String, isFullscreen: Bool, changes: [TradeLevelChange])
+
+    /// Chart ✓ button confirmed an edit (including draft orders).
+    case tradeLevelConfirmed(label: String, type: String, isFullscreen: Bool)
+
+    /// User tapped the pencil/edit button to open the order panel for a level.
+    case tradeLevelEditOpen(label: String, type: String, data: String, price: Double, side: String?, stopLossPrice: Double?, takeProfitPrice: Double?, isFullscreen: Bool)
 
     /// Chart engine is requesting data for a time range; native must respond with `resolveDataRequest`.
     case dataRequest(requestId: String, timeframe: String, interval: String, start: Int64, end: Int64)
@@ -149,6 +174,77 @@ public enum BridgeEvent {
                 price:     payload["price"]     as? Double ?? 0,
                 side:      payload["side"]      as? String ?? "",
                 orderType: payload["orderType"] as? String ?? "limit"
+            )
+
+        case "tradeLevelClose":
+            guard let p = obj["payload"] as? [String: Any] else { return nil }
+            let tlcData = p["data"].flatMap { try? JSONSerialization.data(withJSONObject: $0) }
+                .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+            return .tradeLevelClose(
+                label:        p["label"]       as? String ?? "",
+                type:         p["type"]        as? String ?? "",
+                action:       p["action"]      as? String ?? "",
+                data:         tlcData,
+                bracketType:  p["bracketType"] as? String,
+                isFullscreen: p["isFullscreen"] as? Bool ?? false
+            )
+
+        case "tradeLevelDrag":
+            guard let p = obj["payload"] as? [String: Any] else { return nil }
+            let tldData = p["data"].flatMap { try? JSONSerialization.data(withJSONObject: $0) }
+                .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+            return .tradeLevelDrag(
+                label:        p["label"]        as? String ?? "",
+                newPrice:     p["newPrice"]     as? Double ?? 0,
+                data:         tldData,
+                bracketType:  p["bracketType"]  as? String,
+                isFullscreen: p["isFullscreen"] as? Bool ?? false
+            )
+
+        case "tradeLevelEdit":
+            guard let p = obj["payload"] as? [String: Any] else { return nil }
+            let tleData = p["data"].flatMap { try? JSONSerialization.data(withJSONObject: $0) }
+                .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+            let rawChanges = p["changes"] as? [[String: Any]] ?? []
+            let changes: [TradeLevelChange] = rawChanges.map { c in
+                let cData = c["data"].flatMap { try? JSONSerialization.data(withJSONObject: $0) }
+                    .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+                return TradeLevelChange(
+                    field:             c["field"]             as? String ?? "",
+                    newPrice:          c["newPrice"]          as? Double ?? 0,
+                    data:              cData,
+                    bracketOrderLabel: c["bracketOrderLabel"] as? String
+                )
+            }
+            return .tradeLevelEdit(
+                label:        p["label"]        as? String ?? "",
+                type:         p["type"]         as? String ?? "",
+                data:         tleData,
+                isFullscreen: p["isFullscreen"] as? Bool ?? false,
+                changes:      changes
+            )
+
+        case "tradeLevelConfirmed":
+            guard let p = obj["payload"] as? [String: Any] else { return nil }
+            return .tradeLevelConfirmed(
+                label:        p["label"]        as? String ?? "",
+                type:         p["type"]         as? String ?? "",
+                isFullscreen: p["isFullscreen"] as? Bool ?? false
+            )
+
+        case "tradeLevelEditOpen":
+            guard let p = obj["payload"] as? [String: Any] else { return nil }
+            let tleoData = p["data"].flatMap { try? JSONSerialization.data(withJSONObject: $0) }
+                .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+            return .tradeLevelEditOpen(
+                label:           p["label"]           as? String ?? "",
+                type:            p["type"]            as? String ?? "",
+                data:            tleoData,
+                price:           p["price"]           as? Double ?? 0,
+                side:            p["side"]            as? String,
+                stopLossPrice:   p["stopLossPrice"]   as? Double,
+                takeProfitPrice: p["takeProfitPrice"] as? Double,
+                isFullscreen:    p["isFullscreen"]    as? Bool ?? false
             )
 
         case "dataRequest":

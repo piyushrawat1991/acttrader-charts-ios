@@ -74,6 +74,13 @@ public class ActtraderChartsView: UIView {
     ///   - positionRenderStyle: Render style for open positions.
     ///   - hideLevelConfirmCancel: Hide on-canvas confirm/cancel buttons on TFC level edits. Defaults to `false` when `nil`.
     ///   - hideQtyButton: Hide the floating qty input overlay on draft orders. Defaults to `false` when `nil`.
+    ///   - aggregateFrom: Per-timeframe base interval override for client-side aggregation (e.g. `["1h": "1m"]`).
+    ///   - canvasColorsJson: JSON string of per-theme canvas background color overrides.
+    ///   - themeOverridesJson: JSON string of per-theme deep-partial color overrides.
+    ///   - labelsJson: JSON string of user-visible string overrides for i18n/localisation.
+    ///   - uiConfigJson: JSON string of per-component UI configuration overrides (font sizes, spacing).
+    ///   - durationTimeframeMap: Override the default duration → timeframe pairings for the bottom bar.
+    ///   - onSymbolClick: When `true`, fires a `symbolClick` event on symbol tap instead of opening the picker modal.
     public init(
         theme: String = "dark",
         symbol: String? = nil,
@@ -98,7 +105,14 @@ public class ActtraderChartsView: UIView {
         tradeDisplayFilter: String? = nil,
         positionRenderStyle: String? = nil,
         hideLevelConfirmCancel: Bool? = nil,
-        hideQtyButton: Bool? = nil
+        hideQtyButton: Bool? = nil,
+        aggregateFrom: [String: String]? = nil,
+        canvasColorsJson: String? = nil,
+        themeOverridesJson: String? = nil,
+        labelsJson: String? = nil,
+        uiConfigJson: String? = nil,
+        durationTimeframeMap: [String: String]? = nil,
+        onSymbolClick: Bool? = nil
     ) {
         // Build WKWebView configuration
         let config = WKWebViewConfiguration()
@@ -171,7 +185,14 @@ public class ActtraderChartsView: UIView {
             tradeDisplayFilter: tradeDisplayFilter,
             positionRenderStyle: positionRenderStyle,
             hideLevelConfirmCancel: hideLevelConfirmCancel,
-            hideQtyButton: hideQtyButton
+            hideQtyButton: hideQtyButton,
+            aggregateFrom: aggregateFrom,
+            canvasColorsJson: canvasColorsJson,
+            themeOverridesJson: themeOverridesJson,
+            labelsJson: labelsJson,
+            uiConfigJson: uiConfigJson,
+            durationTimeframeMap: durationTimeframeMap,
+            onSymbolClick: onSymbolClick
         ))
     }
 
@@ -241,6 +262,12 @@ public class ActtraderChartsView: UIView {
 
     /// Called when the user taps the pencil/edit button to open the order panel for a level.
     public var onTradeLevelEditOpen: ((BridgeEvent) -> Void)?
+
+    /// Called when a new draft order is shown on the chart — open the buy/sell form.
+    public var onDraftInitiated: ((BridgeEvent) -> Void)?
+
+    /// Called when a draft order is cancelled without confirming.
+    public var onDraftCancelled: ((BridgeEvent) -> Void)?
 
     /// Called when the chart engine requests data for a time range.
     ///
@@ -574,6 +601,8 @@ public class ActtraderChartsView: UIView {
         case .tradeLevelEdit:      onTradeLevelEdit?(event)
         case .tradeLevelConfirmed: onTradeLevelConfirmed?(event)
         case .tradeLevelEditOpen:  onTradeLevelEditOpen?(event)
+        case .draftInitiated:      onDraftInitiated?(event)
+        case .draftCancelled:      onDraftCancelled?(event)
         case .dataRequest:         onDataRequest?(event)
         case .symbolClick:         onSymbolClick?(event)
         case .error:               onError?(event)

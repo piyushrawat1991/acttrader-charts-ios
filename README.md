@@ -162,6 +162,8 @@ ActtraderChartsView.prewarm()
 | `onTradeLevelDrag` | Live price during drag, fires on every move — payload includes `label`, `newPrice`, `bracketType?`, `data`, `isFullscreen` |
 | `onTradeLevelEditOpen` | User tapped the pencil edit button — payload includes `label`, `type`, `price`, `side?`, `stopLossPrice?`, `takeProfitPrice?`, `data`, `isFullscreen` |
 | `onTradeLevelConfirmed` | Chart ✓ button confirmed an edit — payload includes `label`, `type`, `isFullscreen` |
+| `onDraftInitiated` | New draft order shown — payload includes `side`, `price`, `orderType`, `isFullscreen` |
+| `onDraftCancelled` | Draft order cancelled — payload includes `label`, `isFullscreen` |
 | `onDataRequest` | Chart requests data for a time range — payload includes `requestId`, `from`, `to`, `timeframe`; call `resolveDataRequest` to respond |
 | `onSymbolClick` | User tapped the symbol name (requires `onSymbolClick: true` in `init`) |
 | `onError` | Engine error |

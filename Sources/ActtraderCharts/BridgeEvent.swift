@@ -67,6 +67,13 @@ public enum BridgeEvent {
     /// User tapped the pencil/edit button to open the order panel for a level.
     case tradeLevelEditOpen(label: String, type: String, data: String, price: Double, side: String?, stopLossPrice: Double?, takeProfitPrice: Double?, isFullscreen: Bool)
 
+    /// Emitted when a new draft order is shown on the chart (market, limit, or stop).
+    /// Native layer should open the buy/sell form.
+    case draftInitiated(side: String, price: Double, orderType: String, isFullscreen: Bool)
+
+    /// Emitted when a draft order is cancelled (Escape, ✕ button, or external revert).
+    case draftCancelled(label: String, isFullscreen: Bool)
+
     /// Chart engine is requesting data for a time range; native must respond with `resolveDataRequest`.
     case dataRequest(requestId: String, timeframe: String, interval: String, start: Int64, end: Int64)
 
@@ -248,6 +255,22 @@ public enum BridgeEvent {
                 stopLossPrice:   p["stopLossPrice"]   as? Double,
                 takeProfitPrice: p["takeProfitPrice"] as? Double,
                 isFullscreen:    p["isFullscreen"]    as? Bool ?? false
+            )
+
+        case "draftInitiated":
+            guard let p = obj["payload"] as? [String: Any] else { return nil }
+            return .draftInitiated(
+                side:         p["side"]         as? String ?? "",
+                price:        p["price"]        as? Double ?? 0,
+                orderType:    p["orderType"]    as? String ?? "",
+                isFullscreen: p["isFullscreen"] as? Bool ?? false
+            )
+
+        case "draftCancelled":
+            guard let p = obj["payload"] as? [String: Any] else { return nil }
+            return .draftCancelled(
+                label:        p["label"]        as? String ?? "",
+                isFullscreen: p["isFullscreen"] as? Bool ?? false
             )
 
         case "dataRequest":

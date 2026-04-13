@@ -221,6 +221,21 @@ public class ActtraderChartsView: UIView {
     /// Called when the user submits an order via the floating trade button.
     public var onPlaceOrder: ((BridgeEvent) -> Void)?
 
+    /// Called when the user taps × to close or cancel a trade level or remove a bracket.
+    public var onTradeLevelClose: ((BridgeEvent) -> Void)?
+
+    /// Called on every pointer move while a level or bracket is being dragged.
+    public var onTradeLevelDrag: ((BridgeEvent) -> Void)?
+
+    /// Called when the user confirms edits to a trade level (main, SL, TP batched together).
+    public var onTradeLevelEdit: ((BridgeEvent) -> Void)?
+
+    /// Called when the chart ✓ button confirms an edit (including draft orders).
+    public var onTradeLevelConfirmed: ((BridgeEvent) -> Void)?
+
+    /// Called when the user taps the pencil/edit button to open the order panel for a level.
+    public var onTradeLevelEditOpen: ((BridgeEvent) -> Void)?
+
     /// Called when the chart engine requests data for a time range.
     ///
     /// Implement this to serve data requests from the chart. Fetch bars for the given
@@ -429,9 +444,14 @@ public class ActtraderChartsView: UIView {
         case .dataLoaded:   onDataLoaded?(event)
         case .newBar:       onNewBar?(event)
         case .streamStatus: onStreamStatus?(event)
-        case .placeOrder:   onPlaceOrder?(event)
-        case .dataRequest:  onDataRequest?(event)
-        case .error:        onError?(event)
+        case .placeOrder:          onPlaceOrder?(event)
+        case .tradeLevelClose:     onTradeLevelClose?(event)
+        case .tradeLevelDrag:      onTradeLevelDrag?(event)
+        case .tradeLevelEdit:      onTradeLevelEdit?(event)
+        case .tradeLevelConfirmed: onTradeLevelConfirmed?(event)
+        case .tradeLevelEditOpen:  onTradeLevelEditOpen?(event)
+        case .dataRequest:         onDataRequest?(event)
+        case .error:               onError?(event)
         }
     }
 }

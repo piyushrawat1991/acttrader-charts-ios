@@ -72,6 +72,8 @@ public class ActtraderChartsView: UIView {
     ///   - tradesThresholdForHorizontalLine: Min trade count to render a horizontal level line.
     ///   - tradeDisplayFilter: Filter for which trade levels to display.
     ///   - positionRenderStyle: Render style for open positions.
+    ///   - hideLevelConfirmCancel: Hide on-canvas confirm/cancel buttons on TFC level edits. Defaults to `false` when `nil`.
+    ///   - hideQtyButton: Hide the floating qty input overlay on draft orders. Defaults to `false` when `nil`.
     public init(
         theme: String = "dark",
         symbol: String? = nil,
@@ -94,7 +96,9 @@ public class ActtraderChartsView: UIView {
         tickClosePriceSource: String? = nil,
         tradesThresholdForHorizontalLine: Int? = nil,
         tradeDisplayFilter: String? = nil,
-        positionRenderStyle: String? = nil
+        positionRenderStyle: String? = nil,
+        hideLevelConfirmCancel: Bool? = nil,
+        hideQtyButton: Bool? = nil
     ) {
         // Build WKWebView configuration
         let config = WKWebViewConfiguration()
@@ -165,7 +169,9 @@ public class ActtraderChartsView: UIView {
             tickClosePriceSource: tickClosePriceSource,
             tradesThresholdForHorizontalLine: tradesThresholdForHorizontalLine,
             tradeDisplayFilter: tradeDisplayFilter,
-            positionRenderStyle: positionRenderStyle
+            positionRenderStyle: positionRenderStyle,
+            hideLevelConfirmCancel: hideLevelConfirmCancel,
+            hideQtyButton: hideQtyButton
         ))
     }
 
@@ -242,6 +248,9 @@ public class ActtraderChartsView: UIView {
     /// `timeframe`/`interval` and `start`/`end` timestamps (milliseconds since epoch),
     /// then call `resolveDataRequest(requestId:bars:)` to deliver the data.
     public var onDataRequest: ((BridgeEvent) -> Void)?
+
+    /// Called when the user taps the symbol name and `onSymbolClick` was enabled in the init command.
+    public var onSymbolClick: ((BridgeEvent) -> Void)?
 
     /// Called when the chart engine reports an error.
     public var onError: ((BridgeEvent) -> Void)?
@@ -341,6 +350,121 @@ public class ActtraderChartsView: UIView {
     /// Useful for diagnosing live candle or streaming issues during development.
     public func setDebug(_ enabled: Bool) {
         sendCommand(.setDebug(enabled))
+    }
+
+    // ── Trade levels ──────────────────────────────────────────────────────────
+
+    /// Replaces all levels of the given type with the provided data array.
+    ///
+    /// Pass `type: "position"` for open positions, `"pending"` for limit/stop orders,
+    /// or `"trade"` for read-only reference lines. Each dict in `levels` must contain
+    /// at least the `labelKey` and `priceKey` entries. Optional entries include
+    /// `side`, `stopLossPrice`, `takeProfitPrice`, `pnl`, `pnlText`, `text`,
+    /// `lots`, `orderType`, and `entryPriceEditable`.
+    public func setLevels(_ levels: [[String: Any]], labelKey: String, priceKey: String,
+                          type: String, pnlKey: String? = nil, pnlTextKey: String? = nil) {
+        sendCommand(.setLevels(levels: levels, labelKey: labelKey, priceKey: priceKey,
+                               type: type, pnlKey: pnlKey, pnlTextKey: pnlTextKey))
+    }
+
+    /// Removes a single level by its label. No-op if no level with that label exists.
+    public func removeLevelByLabel(_ label: String) {
+        sendCommand(.removeLevelByLabel(label))
+    }
+
+    /// Updates the entry price of an existing level.
+    public func updateLevelMainPrice(label: String, price: Double) {
+        sendCommand(.updateLevelMainPrice(label: label, price: price))
+    }
+
+    /// Updates or removes a SL/TP bracket on an existing level.
+    /// - Parameter bracketType: `"sl"` or `"tp"`.
+    /// - Parameter price: Pass `nil` to remove the bracket.
+    public func updateLevelBracket(label: String, bracketType: String, price: Double?) {
+        sendCommand(.updateLevelBracket(label: label, bracketType: bracketType, price: price))
+    }
+
+    /// Cancels an in-progress level edit, reverting to the last confirmed price.
+    public func cancelLevelEdit(_ label: String) {
+        sendCommand(.cancelLevelEdit(label))
+    }
+
+    /// Programmatically selects (highlights) a level. Pass `nil` to deselect all.
+    public func selectLevel(_ label: String?) {
+        sendCommand(.selectLevel(label))
+    }
+
+    // ── Draft orders ──────────────────────────────────────────────────────────
+
+    /// Shows a draggable limit or stop draft order line on the chart.
+    ///
+    /// While the user drags it the `onTradeLevelDrag` event fires on each move.
+    /// Confirming via the chart button emits `onTradeLevelConfirmed`.
+    /// - Parameter orderType: `"limit"` or `"stop"`.
+    public func showDraftOrder(price: Double, side: String, orderType: String) {
+        sendCommand(.showDraftOrder(price: price, side: side, orderType: orderType))
+    }
+
+    /// Shows a non-draggable market-order preview line.
+    ///
+    /// SL/TP brackets can still be attached via `updateDraftOrderBracket`.
+    public func showMarketDraft(price: Double, side: String) {
+        sendCommand(.showMarketDraft(price: price, side: side))
+    }
+
+    /// Removes any active draft order from the chart.
+    public func clearDraftOrder() {
+        sendCommand(.clearDraftOrder)
+    }
+
+    /// Updates the lot quantity shown on the active draft order chip.
+    public func setDraftOrderLots(_ lots: Double) {
+        sendCommand(.setDraftOrderLots(lots))
+    }
+
+    /// Moves the draft order price line to a new price.
+    public func updateDraftOrderPrice(_ price: Double) {
+        sendCommand(.updateDraftOrderPrice(price))
+    }
+
+    /// Updates or removes a SL/TP bracket on the active draft order.
+    /// - Parameter bracketType: `"sl"` or `"tp"`.
+    /// - Parameter price: Pass `nil` to remove the bracket.
+    public func updateDraftOrderBracket(bracketType: String, price: Double?) {
+        sendCommand(.updateDraftOrderBracket(bracketType: bracketType, price: price))
+    }
+
+    // ── UI controls ───────────────────────────────────────────────────────────
+
+    /// Shows or hides the volume sub-pane.
+    public func setVolume(_ show: Bool) {
+        sendCommand(.setVolume(show))
+    }
+
+    /// Updates the symbol list used by the ISIN picker modal after initial setup.
+    public func setIsins(_ isins: [String]) {
+        sendCommand(.setIsins(isins))
+    }
+
+    /// Updates the minimum lot size shown in the trade popover.
+    public func setMinLots(_ lots: Double) {
+        sendCommand(.setMinLots(lots))
+    }
+
+    /// Resets both price and time axes to their default auto-fit state.
+    public func resetView() {
+        sendCommand(.resetView)
+    }
+
+    /// Shows or hides the loading overlay.
+    public func setLoading(_ loading: Bool) {
+        sendCommand(.setLoading(loading))
+    }
+
+    /// Replaces a specific bar with authoritative OHLCV data (e.g. a correction from the server).
+    /// - Parameter barTime: Unix millisecond timestamp of the bar to replace.
+    public func correctBar(barTime: Int64, bar: OHLCVBar) {
+        sendCommand(.correctBar(barTime: barTime, bar: bar))
     }
 
     /// Destroys the chart engine and releases WebView resources.
@@ -451,6 +575,7 @@ public class ActtraderChartsView: UIView {
         case .tradeLevelConfirmed: onTradeLevelConfirmed?(event)
         case .tradeLevelEditOpen:  onTradeLevelEditOpen?(event)
         case .dataRequest:         onDataRequest?(event)
+        case .symbolClick:         onSymbolClick?(event)
         case .error:               onError?(event)
         }
     }

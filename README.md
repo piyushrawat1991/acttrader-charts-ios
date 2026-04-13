@@ -86,6 +86,7 @@ ActtraderChartsView.prewarm()
 | `showActLogo` | `Bool?` | `nil` | Show ACT watermark logo |
 | `showCandleCountdown` | `Bool?` | `nil` | Show countdown timer on the live candle |
 | `candleCountdownTimeframes` | `[String]?` / `"all"` | `nil` | Timeframes where the countdown appears |
+| `disableCountdownOnMobile` | `Bool?` | `nil` | Hide the countdown on small screens |
 | `enableTrading` | `Bool` | `false` | Show the floating buy/sell order button |
 | `minLots` | `Int?` | `nil` | Minimum lot size for order entry (requires `enableTrading`) |
 | `maxSubPanes` | `Int?` | `nil` | Max simultaneous oscillator sub-panes |
@@ -95,6 +96,8 @@ ActtraderChartsView.prewarm()
 | `tradesThresholdForHorizontalLine` | `Int?` | `nil` | Level count above which render auto-switches to dot mode |
 | `tradeDisplayFilter` | `String?` | `nil` | Which TFC levels are visible: `"all"` · `"positions"` · `"orders"` · `"none"` |
 | `positionRenderStyle` | `String?` | `nil` | Force position render style: `"line"` or `"dot"` |
+| `hideLevelConfirmCancel` | `Bool?` | `nil` | Hide on-canvas ✓/✗ confirm/cancel buttons for TFC level edits |
+| `hideQtyButton` | `Bool?` | `nil` | Hide the floating Qty input overlay on draft orders |
 
 ### Commands
 
@@ -112,7 +115,30 @@ ActtraderChartsView.prewarm()
 | `clearAllDrawings()` | Removes all drawings |
 | `getState()` | Fires `onStateSnapshot` asynchronously |
 | `setState(_:)` | Restores from a prior `onStateSnapshot` JSON string |
+| `resolveDataRequest(requestId:bars:)` | Resolves a pending `onDataRequest` with fetched bars |
+| `setDebug(_:)` | Enable or disable verbose logging in the browser console |
 | `destroy()` | Tears down the engine |
+| **TFC — Trade Levels** | |
+| `setLevels(_:labelKey:priceKey:type:pnlKey:pnlTextKey:)` | Replace all levels of a given type; pass `[]` to clear |
+| `removeLevelByLabel(_:)` | Remove a single level by label |
+| `updateLevelMainPrice(label:price:)` | Update the entry price of an existing level |
+| `updateLevelBracket(label:bracketType:price:)` | Update or remove a SL/TP bracket; pass `nil` price to remove |
+| `cancelLevelEdit(_:)` | Cancel an in-progress level edit, reverting to last confirmed price |
+| `selectLevel(_:)` | Programmatically highlight a level; pass `nil` to deselect all |
+| **TFC — Draft Orders** | |
+| `showDraftOrder(price:side:orderType:)` | Show a draggable limit or stop draft order line |
+| `showMarketDraft(price:side:)` | Show a non-draggable market-order preview line |
+| `clearDraftOrder()` | Remove the active draft order |
+| `setDraftOrderLots(_:)` | Update the lot quantity on the active draft order chip |
+| `updateDraftOrderPrice(_:)` | Move the draft order price line to a new price |
+| `updateDraftOrderBracket(bracketType:price:)` | Update or remove a SL/TP bracket on the draft order; pass `nil` to remove |
+| **UI / Utility** | |
+| `setVolume(_:)` | Show or hide the volume sub-pane |
+| `setIsins(_:)` | Update the symbol list used by the ISIN picker |
+| `setMinLots(_:)` | Update the minimum lot size in the trade popover |
+| `resetView()` | Reset price and time axes to auto-fit |
+| `setLoading(_:)` | Show or hide the loading overlay |
+| `correctBar(barTime:bar:)` | Replace a specific bar with authoritative OHLCV data (e.g. server correction) |
 
 ### Events (callbacks)
 
@@ -136,6 +162,8 @@ ActtraderChartsView.prewarm()
 | `onTradeLevelDrag` | Live price during drag, fires on every move — payload includes `label`, `newPrice`, `bracketType?`, `data`, `isFullscreen` |
 | `onTradeLevelEditOpen` | User tapped the pencil edit button — payload includes `label`, `type`, `price`, `side?`, `stopLossPrice?`, `takeProfitPrice?`, `data`, `isFullscreen` |
 | `onTradeLevelConfirmed` | Chart ✓ button confirmed an edit — payload includes `label`, `type`, `isFullscreen` |
+| `onDataRequest` | Chart requests data for a time range — payload includes `requestId`, `from`, `to`, `timeframe`; call `resolveDataRequest` to respond |
+| `onSymbolClick` | User tapped the symbol name (requires `onSymbolClick: true` in `init`) |
 | `onError` | Engine error |
 | `onBridgeEvent` | Generic fallback — every event including those with typed callbacks |
 

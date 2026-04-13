@@ -14,8 +14,7 @@ jobs:
 
       - name: Download chart.html
         run: |
-          curl -L \
-            -H "Authorization: Bearer ${{ secrets.CHARTS_REPO_PAT }}" \
+          curl -L --fail \
             "${{ github.event.client_payload.chart_html_url }}" \
             -o Sources/ActtraderCharts/Resources/chart.html
 

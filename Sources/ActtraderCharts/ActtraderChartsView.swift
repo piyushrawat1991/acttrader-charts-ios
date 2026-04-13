@@ -53,14 +53,48 @@ public class ActtraderChartsView: UIView {
     ///   - theme: `"dark"` (default) or `"light"`.
     ///   - symbol: Symbol name displayed in the chart top bar (e.g. `"EURUSD"`).
     ///   - series: Initial chart type (e.g. `"candlestick"`, `"line"`). Defaults to `"candlestick"`.
+    ///   - timeframe: Initial timeframe (e.g. `"1m"`, `"1h"`, `"1D"`).
+    ///   - duration: Initial duration (e.g. `"1D"`, `"1M"`, `"1Y"`).
     ///   - enableTrading: Show the floating trade button. Defaults to `false`.
     ///   - minLots: Minimum lot size shown in the order form. Relevant when `enableTrading` is `true`.
+    ///   - showVolume: Show the volume panel. Defaults to `true` when `nil`.
+    ///   - showUI: Show the chart toolbar UI. Defaults to `true` when `nil`.
+    ///   - showDrawingTools: Show drawing tools in the toolbar. Defaults to `true` when `nil`.
+    ///   - showBidAskLines: Show bid/ask price lines. Defaults to `false` when `nil`.
+    ///   - showActLogo: Show the ActTrader watermark logo. Defaults to `false` when `nil`.
+    ///   - showCandleCountdown: Show the candle countdown timer.
+    ///   - candleCountdownTimeframes: Timeframes on which the countdown is shown. Pass `["all"]` to enable for all.
+    ///   - disableCountdownOnMobile: Suppress the countdown specifically on mobile.
+    ///   - maxSubPanes: Maximum number of indicator sub-panes (oscillators). Defaults to 3 when `nil`.
+    ///   - mobileBarDivisor: Bar density divisor for mobile (2, 3, or 4). Defaults to 2 when `nil`.
+    ///   - targetCandleWidth: Target candle width in pixels. Defaults to 10 when `nil`.
+    ///   - tickClosePriceSource: Price source for tick close (`"bid"` or `"ask"`). Defaults to `"bid"` when `nil`.
+    ///   - tradesThresholdForHorizontalLine: Min trade count to render a horizontal level line.
+    ///   - tradeDisplayFilter: Filter for which trade levels to display.
+    ///   - positionRenderStyle: Render style for open positions.
     public init(
         theme: String = "dark",
         symbol: String? = nil,
         series: String? = nil,
+        timeframe: String? = nil,
+        duration: String? = nil,
         enableTrading: Bool = false,
-        minLots: Int = 1
+        minLots: Int = 1,
+        showVolume: Bool? = nil,
+        showUI: Bool? = nil,
+        showDrawingTools: Bool? = nil,
+        showBidAskLines: Bool? = nil,
+        showActLogo: Bool? = nil,
+        showCandleCountdown: Bool? = nil,
+        candleCountdownTimeframes: [String]? = nil,
+        disableCountdownOnMobile: Bool? = nil,
+        maxSubPanes: Int? = nil,
+        mobileBarDivisor: Int? = nil,
+        targetCandleWidth: Double? = nil,
+        tickClosePriceSource: String? = nil,
+        tradesThresholdForHorizontalLine: Int? = nil,
+        tradeDisplayFilter: String? = nil,
+        positionRenderStyle: String? = nil
     ) {
         // Build WKWebView configuration
         let config = WKWebViewConfiguration()
@@ -113,10 +147,25 @@ public class ActtraderChartsView: UIView {
             theme: theme,
             symbol: symbol,
             series: series,
+            timeframe: timeframe,
+            duration: duration,
             enableTrading: enableTrading,
             minLots: minLots,
-            showCandleCountdown: nil,
-            disableCountdownOnMobile: nil
+            showVolume: showVolume,
+            showUI: showUI,
+            showDrawingTools: showDrawingTools,
+            showBidAskLines: showBidAskLines,
+            showActLogo: showActLogo,
+            showCandleCountdown: showCandleCountdown,
+            candleCountdownTimeframes: candleCountdownTimeframes,
+            disableCountdownOnMobile: disableCountdownOnMobile,
+            maxSubPanes: maxSubPanes,
+            mobileBarDivisor: mobileBarDivisor,
+            targetCandleWidth: targetCandleWidth,
+            tickClosePriceSource: tickClosePriceSource,
+            tradesThresholdForHorizontalLine: tradesThresholdForHorizontalLine,
+            tradeDisplayFilter: tradeDisplayFilter,
+            positionRenderStyle: positionRenderStyle
         ))
     }
 
@@ -171,6 +220,13 @@ public class ActtraderChartsView: UIView {
 
     /// Called when the user submits an order via the floating trade button.
     public var onPlaceOrder: ((BridgeEvent) -> Void)?
+
+    /// Called when the chart engine requests data for a time range.
+    ///
+    /// Implement this to serve data requests from the chart. Fetch bars for the given
+    /// `timeframe`/`interval` and `start`/`end` timestamps (milliseconds since epoch),
+    /// then call `resolveDataRequest(requestId:bars:)` to deliver the data.
+    public var onDataRequest: ((BridgeEvent) -> Void)?
 
     /// Called when the chart engine reports an error.
     public var onError: ((BridgeEvent) -> Void)?
@@ -253,6 +309,23 @@ public class ActtraderChartsView: UIView {
     /// - Parameter stateJson: Raw JSON string from a prior `onStateSnapshot` callback.
     public func setState(_ stateJson: String) {
         sendCommand(.setState(stateJson))
+    }
+
+    /// Resolves a pending data request from the chart engine with fetched bars.
+    ///
+    /// Call this from `onDataRequest` after fetching the required data.
+    /// - Parameters:
+    ///   - requestId: The `requestId` received in the `dataRequest` event.
+    ///   - bars: The OHLCV bars covering the requested time range.
+    public func resolveDataRequest(requestId: String, bars: [OHLCVBar]) {
+        sendCommand(.resolveDataRequest(requestId: requestId, bars: bars))
+    }
+
+    /// Enables or disables verbose tick/render logging in the browser console.
+    ///
+    /// Useful for diagnosing live candle or streaming issues during development.
+    public func setDebug(_ enabled: Bool) {
+        sendCommand(.setDebug(enabled))
     }
 
     /// Destroys the chart engine and releases WebView resources.
@@ -357,6 +430,7 @@ public class ActtraderChartsView: UIView {
         case .newBar:       onNewBar?(event)
         case .streamStatus: onStreamStatus?(event)
         case .placeOrder:   onPlaceOrder?(event)
+        case .dataRequest:  onDataRequest?(event)
         case .error:        onError?(event)
         }
     }

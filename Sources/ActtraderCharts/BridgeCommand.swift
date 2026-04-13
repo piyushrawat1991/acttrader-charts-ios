@@ -20,10 +20,25 @@ public enum BridgeCommand {
         theme: String,
         symbol: String?,
         series: String?,
+        timeframe: String?,
+        duration: String?,
         enableTrading: Bool,
         minLots: Int,
+        showVolume: Bool?,
+        showUI: Bool?,
+        showDrawingTools: Bool?,
+        showBidAskLines: Bool?,
+        showActLogo: Bool?,
         showCandleCountdown: Bool?,
-        disableCountdownOnMobile: Bool?
+        candleCountdownTimeframes: [String]?,
+        disableCountdownOnMobile: Bool?,
+        maxSubPanes: Int?,
+        mobileBarDivisor: Int?,
+        targetCandleWidth: Double?,
+        tickClosePriceSource: String?,
+        tradesThresholdForHorizontalLine: Int?,
+        tradeDisplayFilter: String?,
+        positionRenderStyle: String?
     )
 
     /// Replaces the full dataset.
@@ -69,6 +84,15 @@ public enum BridgeCommand {
     /// - Parameter stateJson: Raw JSON string from a prior `stateSnapshot` event.
     case setState(String)
 
+    /// Resolves a pending dataLoader request with fetched bars.
+    /// - Parameters:
+    ///   - requestId: The ID received in the `dataRequest` bridge event.
+    ///   - bars: The fetched OHLCV bars to return to the chart engine.
+    case resolveDataRequest(requestId: String, bars: [OHLCVBar])
+
+    /// Enables or disables verbose tick/render logging in the chart engine.
+    case setDebug(Bool)
+
     /// Destroys the chart engine and releases resources.
     case destroy
 
@@ -79,16 +103,35 @@ public enum BridgeCommand {
         let envelope: [String: Any]
         switch self {
 
-        case let .initialize(theme, symbol, series, enableTrading, minLots, showCandleCountdown, disableCountdownOnMobile):
+        case let .initialize(theme, symbol, series, timeframe, duration, enableTrading, minLots,
+                             showVolume, showUI, showDrawingTools, showBidAskLines, showActLogo,
+                             showCandleCountdown, candleCountdownTimeframes, disableCountdownOnMobile,
+                             maxSubPanes, mobileBarDivisor, targetCandleWidth, tickClosePriceSource,
+                             tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle):
             var payload: [String: Any] = ["theme": theme]
             if let symbol { payload["symbol"] = symbol }
             if let series { payload["series"] = series }
+            if let timeframe { payload["timeframe"] = timeframe }
+            if let duration { payload["duration"] = duration }
             if enableTrading {
                 payload["enableTrading"] = true
                 payload["minLots"] = minLots
             }
+            if let showVolume { payload["showVolume"] = showVolume }
+            if let showUI { payload["showUI"] = showUI }
+            if let showDrawingTools { payload["showDrawingTools"] = showDrawingTools }
+            if let showBidAskLines { payload["showBidAskLines"] = showBidAskLines }
+            if let showActLogo { payload["showActLogo"] = showActLogo }
             if let showCandleCountdown { payload["showCandleCountdown"] = showCandleCountdown }
+            if let candleCountdownTimeframes { payload["candleCountdownTimeframes"] = candleCountdownTimeframes }
             if let disableCountdownOnMobile { payload["disableCountdownOnMobile"] = disableCountdownOnMobile }
+            if let maxSubPanes { payload["maxSubPanes"] = maxSubPanes }
+            if let mobileBarDivisor { payload["mobileBarDivisor"] = mobileBarDivisor }
+            if let targetCandleWidth { payload["targetCandleWidth"] = targetCandleWidth }
+            if let tickClosePriceSource { payload["tickClosePriceSource"] = tickClosePriceSource }
+            if let tradesThresholdForHorizontalLine { payload["tradesThresholdForHorizontalLine"] = tradesThresholdForHorizontalLine }
+            if let tradeDisplayFilter { payload["tradeDisplayFilter"] = tradeDisplayFilter }
+            if let positionRenderStyle { payload["positionRenderStyle"] = positionRenderStyle }
             envelope = ["type": "init", "payload": payload]
 
         case let .loadData(bars, fitAll):
@@ -137,6 +180,16 @@ public enum BridgeCommand {
                 let stateObj = try? JSONSerialization.jsonObject(with: data)
             else { return "{}" }
             envelope = ["type": "setState", "payload": stateObj]
+
+        case let .resolveDataRequest(requestId, bars):
+            let barsArray: [[String: Any]] = bars.map { bar in
+                ["open": bar.open, "high": bar.high, "low": bar.low,
+                 "close": bar.close, "volume": bar.volume, "time": bar.time]
+            }
+            envelope = ["type": "resolveDataRequest", "payload": ["requestId": requestId, "bars": barsArray]]
+
+        case let .setDebug(enabled):
+            envelope = ["type": "setDebug", "payload": ["enabled": enabled]]
 
         case .destroy:
             envelope = ["type": "destroy", "payload": [:]]

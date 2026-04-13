@@ -19,7 +19,8 @@ jobs:
           gh release download "v${{ github.event.client_payload.version }}" \
             --repo piyushrawat1991/acttrader-charts \
             --pattern "chart.html" \
-            --output Sources/ActtraderCharts/Resources/chart.html
+            --output Sources/ActtraderCharts/Resources/chart.html \
+            --clobber
 
       - name: Bump version in podspec
         run: |

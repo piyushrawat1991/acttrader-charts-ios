@@ -425,6 +425,20 @@ public class ActtraderChartsView: UIView {
         sendCommand(.addLevelBracket(label: label, bracketType: bracketType))
     }
 
+    /// Unified bracket placement — works for both existing levels and the active draft order.
+    /// Pass `label` (OrderID/TradeID) for an existing level; omit it for the active draft order.
+    /// Fires `onTradeLevelBracketActivated` with the auto-computed price.
+    /// The event's `label` is `""` (empty string) when the bracket was placed on a draft order — check `label.isEmpty` to detect the draft case.
+    public func addBracket(bracketType: String, label: String? = nil) {
+        sendCommand(.addBracket(bracketType: bracketType, label: label))
+    }
+
+    /// Unified bracket removal — works for both existing levels and the active draft order.
+    /// Pass `label` (OrderID/TradeID) for an existing level; omit it for the active draft order.
+    public func removeBracket(bracketType: String, label: String? = nil) {
+        sendCommand(.removeBracket(bracketType: bracketType, label: label))
+    }
+
     /// Cancels an in-progress level edit, reverting to the last confirmed price.
     public func cancelLevelEdit(_ label: String) {
         sendCommand(.cancelLevelEdit(label))

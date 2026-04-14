@@ -125,6 +125,8 @@ ActtraderChartsView.prewarm()
 | `updateLevelMainPrice(label:price:)` | Update the entry price of an existing level |
 | `updateLevelBracket(label:bracketType:price:)` | Update or remove a SL/TP bracket; pass `nil` price to remove |
 | `addLevelBracket(label:bracketType:)` | Auto-place a SL or TP bracket at a default price offset; fires `onTradeLevelBracketActivated` with the computed price |
+| `addBracket(bracketType:label:)` | Unified auto-price bracket placement — pass `label` for an existing order/position, omit it for the active draft order; fires `onTradeLevelBracketActivated` (`label` is `""` for drafts — check `label.isEmpty`) |
+| `removeBracket(bracketType:label:)` | Unified bracket removal — pass `label` for an existing order/position, omit it for the active draft order |
 | `cancelLevelEdit(_:)` | Cancel an in-progress level edit, reverting to last confirmed price |
 | `selectLevel(_:)` | Programmatically highlight a level; pass `nil` to deselect all |
 | **TFC — Draft Orders** | |
@@ -165,7 +167,7 @@ ActtraderChartsView.prewarm()
 | `onTradeLevelClose` | User tapped × on a level — payload includes `label`, `type`, `action`, `data`, `isFullscreen` |
 | `onTradeLevelDrag` | Live price during drag, fires on every move — payload includes `label`, `newPrice`, `bracketType?`, `data`, `isFullscreen` |
 | `onTradeLevelEditOpen` | User tapped the pencil button **or** (when `hideLevelConfirmCancel: true`) tapped a trade level line — payload includes `label`, `type`, `price`, `side?`, `stopLossPrice?`, `takeProfitPrice?`, `data`, `isFullscreen` |
-| `onTradeLevelBracketActivated` | SL/TP bracket auto-placed via `addLevelBracket` — use the `price` to pre-populate your bracket price input — payload includes `label`, `bracketType`, `price`, `isFullscreen` |
+| `onTradeLevelBracketActivated` | SL/TP bracket auto-placed via `addLevelBracket` or `addBracket` — use the `price` to pre-populate your bracket price input — payload includes `label` (`""` for draft orders, OrderID string for existing levels), `bracketType`, `price`, `isFullscreen` |
 | `onTradeLevelConfirmed` | Chart ✓ button confirmed an edit — payload includes `label`, `type`, `isFullscreen` |
 | `onDraftInitiated` | New draft order shown — payload includes `side`, `price`, `orderType`, `isFullscreen` |
 | `onDraftCancelled` | Draft order cancelled — payload includes `label`, `isFullscreen` |
@@ -190,7 +192,13 @@ Behaviour changes when this flag is active:
 
 **Market orders from chart crosshair:** When live BID/ASK data is streaming and the crosshair trade button is tapped at a price inside the spread, `onDraftInitiated` fires with `orderType = "market"` — use this to open your market order form.
 
-**Adding a bracket without a price:** Call `addLevelBracket(label: "POS-1", bracketType: "sl")` from your native form to place a bracket at a sensible default price without knowing the exact value first. The chart responds with `onTradeLevelBracketActivated` carrying the computed price — use it to populate your SL/TP input field.
+**Adding a bracket without a price:** Use `addBracket(bracketType:label:)` from your native form to auto-place a SL or TP bracket at a sensible default price:
+- **Draft order (new order, no ID yet):** `chart.addBracket(bracketType: "sl")` — omit `label`; the chart operates on the active draft.
+- **Existing order/position:** `chart.addBracket(bracketType: "sl", label: orderId)` — pass the OrderID/TradeID.
+
+In both cases the chart fires `onTradeLevelBracketActivated` with the computed price — use it to populate your SL/TP input field. The event's `label` is `""` (empty string) for draft orders — check `label.isEmpty` — and the OrderID string for existing levels.
+
+To remove a bracket without a price: use `removeBracket(bracketType: "sl")` (draft) or `removeBracket(bracketType: "sl", label: orderId)` (existing).
 
 **Draft order estimated P&L:** After placing a draft order bracket, call `setDraftBracketPnl(bracketType: "sl", pnlText: "-$12.50")` to display a consumer-calculated P&L string next to that bracket line on the chart.
 

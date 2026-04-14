@@ -143,6 +143,15 @@ public enum BridgeCommand {
     /// - Parameter bracketType: `"sl"` or `"tp"`.
     case addLevelBracket(label: String, bracketType: String)
 
+    /// Unified bracket placement for mobile UIs — works for both existing levels and the active draft order.
+    /// Pass `label` (OrderID/TradeID) for an existing level; omit it for the active draft order.
+    /// Fires `tradeLevelBracketActivated` with the auto-computed price (label is nil in the event for draft orders).
+    case addBracket(bracketType: String, label: String?)
+
+    /// Unified bracket removal for mobile UIs — works for both existing levels and the active draft order.
+    /// Pass `label` (OrderID/TradeID) for an existing level; omit it for the active draft order.
+    case removeBracket(bracketType: String, label: String?)
+
     /// Cancels an in-progress level edit, reverting to the last confirmed price.
     case cancelLevelEdit(String)
 
@@ -345,6 +354,16 @@ public enum BridgeCommand {
         case let .addLevelBracket(label, bracketType):
             envelope = ["type": "addLevelBracket",
                         "payload": ["label": label, "bracketType": bracketType]]
+
+        case let .addBracket(bracketType, label):
+            var payload: [String: Any] = ["bracketType": bracketType]
+            if let label { payload["label"] = label }
+            envelope = ["type": "addBracket", "payload": payload]
+
+        case let .removeBracket(bracketType, label):
+            var payload: [String: Any] = ["bracketType": bracketType]
+            if let label { payload["label"] = label }
+            envelope = ["type": "removeBracket", "payload": payload]
 
         case let .cancelLevelEdit(label):
             envelope = ["type": "cancelLevelEdit", "payload": ["label": label]]

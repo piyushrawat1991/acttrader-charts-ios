@@ -129,6 +129,7 @@ ActtraderChartsView.prewarm()
 | `showDraftOrder(price:side:orderType:)` | Show a draggable limit or stop draft order line |
 | `showMarketDraft(price:side:)` | Show a non-draggable market-order preview line |
 | `clearDraftOrder()` | Remove the active draft order |
+| `cancelCurrentEdit()` | Cancel whatever is currently being edited or drafted (draft order or level edit); no-op when nothing is active |
 | `setDraftOrderLots(_:)` | Update the lot quantity on the active draft order chip |
 | `updateDraftOrderPrice(_:)` | Move the draft order price line to a new price |
 | `updateDraftOrderBracket(bracketType:price:)` | Update or remove a SL/TP bracket on the draft order; pass `nil` to remove |

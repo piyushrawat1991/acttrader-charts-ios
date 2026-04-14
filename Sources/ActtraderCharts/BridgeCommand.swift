@@ -157,6 +157,9 @@ public enum BridgeCommand {
     /// Removes any active draft order from the chart.
     case clearDraftOrder
 
+    /// Cancels whatever is currently being edited or drafted on the chart (draft order or level edit). No-op when nothing is active.
+    case cancelCurrentEdit
+
     /// Updates the lot quantity shown on the active draft order chip.
     case setDraftOrderLots(Double)
 
@@ -343,6 +346,9 @@ public enum BridgeCommand {
 
         case .clearDraftOrder:
             envelope = ["type": "clearDraftOrder", "payload": [:]]
+
+        case .cancelCurrentEdit:
+            envelope = ["type": "cancelCurrentEdit", "payload": [:]]
 
         case let .setDraftOrderLots(lots):
             envelope = ["type": "setDraftOrderLots", "payload": ["lots": lots]]

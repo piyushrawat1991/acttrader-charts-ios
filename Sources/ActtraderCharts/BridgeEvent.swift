@@ -67,6 +67,10 @@ public enum BridgeEvent {
     /// User tapped the pencil/edit button to open the order panel for a level.
     case tradeLevelEditOpen(label: String, type: String, data: String, price: Double, side: String?, stopLossPrice: Double?, takeProfitPrice: Double?, isFullscreen: Bool)
 
+    /// Emitted after `addLevelBracket()` auto-places a SL/TP bracket.
+    /// Use `price` to populate your order form's SL/TP input field.
+    case tradeLevelBracketActivated(label: String, bracketType: String, price: Double, isFullscreen: Bool)
+
     /// Emitted when a new draft order is shown on the chart (market, limit, or stop).
     /// Native layer should open the buy/sell form.
     case draftInitiated(side: String, price: Double, orderType: String, isFullscreen: Bool)
@@ -255,6 +259,15 @@ public enum BridgeEvent {
                 stopLossPrice:   p["stopLossPrice"]   as? Double,
                 takeProfitPrice: p["takeProfitPrice"] as? Double,
                 isFullscreen:    p["isFullscreen"]    as? Bool ?? false
+            )
+
+        case "tradeLevelBracketActivated":
+            guard let p = obj["payload"] as? [String: Any] else { return nil }
+            return .tradeLevelBracketActivated(
+                label:        p["label"]        as? String ?? "",
+                bracketType:  p["bracketType"]  as? String ?? "",
+                price:        p["price"]        as? Double ?? 0,
+                isFullscreen: p["isFullscreen"] as? Bool ?? false
             )
 
         case "draftInitiated":

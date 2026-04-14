@@ -74,6 +74,7 @@ public class ActtraderChartsView: UIView {
     ///   - positionRenderStyle: Render style for open positions.
     ///   - hideLevelConfirmCancel: Hide on-canvas confirm/cancel buttons on TFC level edits. Defaults to `false` when `nil`.
     ///   - hideQtyButton: Hide the floating qty input overlay on draft orders. Defaults to `false` when `nil`.
+    ///   - showSettings: Show the settings gear button in the top bar. Set to `false` to hide it entirely. Defaults to `true` when `nil`.
     ///   - aggregateFrom: Per-timeframe base interval override for client-side aggregation (e.g. `["1h": "1m"]`).
     ///   - canvasColorsJson: JSON string of per-theme canvas background color overrides.
     ///   - themeOverridesJson: JSON string of per-theme deep-partial color overrides.
@@ -106,6 +107,7 @@ public class ActtraderChartsView: UIView {
         positionRenderStyle: String? = nil,
         hideLevelConfirmCancel: Bool? = nil,
         hideQtyButton: Bool? = nil,
+        showSettings: Bool? = nil,
         aggregateFrom: [String: String]? = nil,
         canvasColorsJson: String? = nil,
         themeOverridesJson: String? = nil,
@@ -186,6 +188,7 @@ public class ActtraderChartsView: UIView {
             positionRenderStyle: positionRenderStyle,
             hideLevelConfirmCancel: hideLevelConfirmCancel,
             hideQtyButton: hideQtyButton,
+            showSettings: showSettings,
             aggregateFrom: aggregateFrom,
             canvasColorsJson: canvasColorsJson,
             themeOverridesJson: themeOverridesJson,
@@ -262,6 +265,10 @@ public class ActtraderChartsView: UIView {
 
     /// Called when the user taps the pencil/edit button to open the order panel for a level.
     public var onTradeLevelEditOpen: ((BridgeEvent) -> Void)?
+
+    /// Called after `addLevelBracket()` auto-places a SL/TP bracket.
+    /// Use the `price` in the event to populate your order form's SL/TP input field.
+    public var onTradeLevelBracketActivated: ((BridgeEvent) -> Void)?
 
     /// Called when a new draft order is shown on the chart — open the buy/sell form.
     public var onDraftInitiated: ((BridgeEvent) -> Void)?
@@ -411,6 +418,13 @@ public class ActtraderChartsView: UIView {
         sendCommand(.updateLevelBracket(label: label, bracketType: bracketType, price: price))
     }
 
+    /// Adds a SL or TP bracket to an existing level at an auto-computed default price.
+    /// Listen for `onTradeLevelBracketActivated` to receive the chosen price so your form can populate its input.
+    /// - Parameter bracketType: `"sl"` or `"tp"`.
+    public func addLevelBracket(label: String, bracketType: String) {
+        sendCommand(.addLevelBracket(label: label, bracketType: bracketType))
+    }
+
     /// Cancels an in-progress level edit, reverting to the last confirmed price.
     public func cancelLevelEdit(_ label: String) {
         sendCommand(.cancelLevelEdit(label))
@@ -464,6 +478,14 @@ public class ActtraderChartsView: UIView {
     /// - Parameter price: Pass `nil` to remove the bracket.
     public func updateDraftOrderBracket(bracketType: String, price: Double?) {
         sendCommand(.updateDraftOrderBracket(bracketType: bracketType, price: price))
+    }
+
+    /// Sets or clears the estimated PNL text shown on a draft order's SL or TP bracket line.
+    /// Call this after `updateDraftOrderBracket` to display consumer-calculated P&L.
+    /// - Parameter bracketType: `"sl"` or `"tp"`.
+    /// - Parameter pnlText: Pre-formatted string (e.g. `"-$12.50"`). Pass `nil` to clear.
+    public func setDraftBracketPnl(bracketType: String, pnlText: String?) {
+        sendCommand(.setDraftBracketPnl(bracketType: bracketType, pnlText: pnlText))
     }
 
     // ── UI controls ───────────────────────────────────────────────────────────
@@ -605,8 +627,9 @@ public class ActtraderChartsView: UIView {
         case .tradeLevelDrag:      onTradeLevelDrag?(event)
         case .tradeLevelEdit:      onTradeLevelEdit?(event)
         case .tradeLevelConfirmed: onTradeLevelConfirmed?(event)
-        case .tradeLevelEditOpen:  onTradeLevelEditOpen?(event)
-        case .draftInitiated:      onDraftInitiated?(event)
+        case .tradeLevelEditOpen:          onTradeLevelEditOpen?(event)
+        case .tradeLevelBracketActivated:  onTradeLevelBracketActivated?(event)
+        case .draftInitiated:              onDraftInitiated?(event)
         case .draftCancelled:      onDraftCancelled?(event)
         case .dataRequest:         onDataRequest?(event)
         case .symbolClick:         onSymbolClick?(event)

@@ -9,10 +9,10 @@ Pod::Spec.new do |s|
     typed events back from the chart engine.
   DESC
 
-  s.homepage         = 'https://github.com/acttrader/acttrader-charts-ios'
+  s.homepage         = 'https://github.com/piyushrawat1991/acttrader-charts-ios'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'ActTrader' => 'dev@acttrader.com' }
-  s.source           = { :git => 'https://github.com/acttrader/acttrader-charts-ios.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/piyushrawat1991/acttrader-charts-ios.git', :tag => s.version.to_s }
 
   s.ios.deployment_target = '14.0'
   s.swift_versions        = ['5.7']

@@ -444,6 +444,11 @@ public class ActtraderChartsView: UIView {
         sendCommand(.clearDraftOrder)
     }
 
+    /// Cancels whatever is currently being edited or drafted on the chart (draft order or level edit). No-op when nothing is active.
+    public func cancelCurrentEdit() {
+        sendCommand(.cancelCurrentEdit)
+    }
+
     /// Updates the lot quantity shown on the active draft order chip.
     public func setDraftOrderLots(_ lots: Double) {
         sendCommand(.setDraftOrderLots(lots))

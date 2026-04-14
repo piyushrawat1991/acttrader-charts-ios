@@ -41,6 +41,7 @@ public enum BridgeCommand {
         positionRenderStyle: String?,
         hideLevelConfirmCancel: Bool?,
         hideQtyButton: Bool?,
+        showSettings: Bool?,
         aggregateFrom: [String: String]?,
         canvasColorsJson: String?,
         themeOverridesJson: String?,
@@ -137,6 +138,11 @@ public enum BridgeCommand {
     /// - Parameter bracketType: `"sl"` or `"tp"`.
     case updateLevelBracket(label: String, bracketType: String, price: Double?)
 
+    /// Adds a SL or TP bracket to an existing level at an auto-computed default price.
+    /// Listen for `tradeLevelBracketActivated` to receive the chosen price so your form can populate its input.
+    /// - Parameter bracketType: `"sl"` or `"tp"`.
+    case addLevelBracket(label: String, bracketType: String)
+
     /// Cancels an in-progress level edit, reverting to the last confirmed price.
     case cancelLevelEdit(String)
 
@@ -171,6 +177,12 @@ public enum BridgeCommand {
     /// - Parameter bracketType: `"sl"` or `"tp"`.
     case updateDraftOrderBracket(bracketType: String, price: Double?)
 
+    /// Sets or clears the estimated PNL text shown on a draft order's SL or TP bracket line.
+    /// Call this after `updateDraftOrderBracket` to display consumer-calculated P&L.
+    /// - Parameter bracketType: `"sl"` or `"tp"`.
+    /// - Parameter pnlText: Pre-formatted string (e.g. `"-$12.50"`). Pass `nil` to clear.
+    case setDraftBracketPnl(bracketType: String, pnlText: String?)
+
     // ── UI controls ───────────────────────────────────────────────────────────
 
     /// Shows or hides the volume sub-pane.
@@ -204,7 +216,7 @@ public enum BridgeCommand {
                              showCandleCountdown, candleCountdownTimeframes, disableCountdownOnMobile,
                              maxSubPanes, mobileBarDivisor, targetCandleWidth, tickClosePriceSource,
                              tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle,
-                             hideLevelConfirmCancel, hideQtyButton,
+                             hideLevelConfirmCancel, hideQtyButton, showSettings,
                              aggregateFrom, canvasColorsJson, themeOverridesJson, labelsJson,
                              uiConfigJson, durationTimeframeMap, onSymbolClick):
             var payload: [String: Any] = ["theme": theme]
@@ -233,6 +245,7 @@ public enum BridgeCommand {
             if let positionRenderStyle { payload["positionRenderStyle"] = positionRenderStyle }
             if let hideLevelConfirmCancel { payload["hideLevelConfirmCancel"] = hideLevelConfirmCancel }
             if let hideQtyButton { payload["hideQtyButton"] = hideQtyButton }
+            if let showSettings { payload["showSettings"] = showSettings }
             if let aggregateFrom { payload["aggregateFrom"] = aggregateFrom }
             if let durationTimeframeMap { payload["durationTimeframeMap"] = durationTimeframeMap }
             if let onSymbolClick, onSymbolClick { payload["onSymbolClick"] = true }
@@ -329,6 +342,10 @@ public enum BridgeCommand {
             envelope = ["type": "updateLevelBracket",
                         "payload": ["label": label, "bracketType": bracketType, "price": priceValue]]
 
+        case let .addLevelBracket(label, bracketType):
+            envelope = ["type": "addLevelBracket",
+                        "payload": ["label": label, "bracketType": bracketType]]
+
         case let .cancelLevelEdit(label):
             envelope = ["type": "cancelLevelEdit", "payload": ["label": label]]
 
@@ -360,6 +377,11 @@ public enum BridgeCommand {
             let priceValue: Any = price ?? NSNull()
             envelope = ["type": "updateDraftOrderBracket",
                         "payload": ["bracketType": bracketType, "price": priceValue]]
+
+        case let .setDraftBracketPnl(bracketType, pnlText):
+            let pnlValue: Any = pnlText ?? NSNull()
+            envelope = ["type": "setDraftBracketPnl",
+                        "payload": ["bracketType": bracketType, "pnlText": pnlValue]]
 
         // ── UI controls ───────────────────────────────────────────────────────
         case let .setVolume(show):

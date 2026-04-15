@@ -56,7 +56,6 @@ public class ActtraderChartsView: UIView {
     ///   - timeframe: Initial timeframe (e.g. `"1m"`, `"1h"`, `"1D"`).
     ///   - duration: Initial duration (e.g. `"1D"`, `"1M"`, `"1Y"`).
     ///   - enableTrading: Show the floating trade button. Defaults to `false`.
-    ///   - minLots: Minimum lot size shown in the order form. Relevant when `enableTrading` is `true`.
     ///   - showVolume: Show the volume panel. Defaults to `true` when `nil`.
     ///   - showUI: Show the chart toolbar UI. Defaults to `true` when `nil`.
     ///   - showDrawingTools: Show drawing tools in the toolbar. Defaults to `true` when `nil`.
@@ -73,7 +72,6 @@ public class ActtraderChartsView: UIView {
     ///   - tradeDisplayFilter: Filter for which trade levels to display.
     ///   - positionRenderStyle: Render style for open positions.
     ///   - hideLevelConfirmCancel: Hide on-canvas confirm/cancel buttons on TFC level edits. Defaults to `false` when `nil`.
-    ///   - hideQtyButton: Hide the floating qty input overlay on draft orders. Defaults to `false` when `nil`.
     ///   - showSettings: Show the settings gear button in the top bar. Set to `false` to hide it entirely. Defaults to `true` when `nil`.
     ///   - aggregateFrom: Per-timeframe base interval override for client-side aggregation (e.g. `["1h": "1m"]`).
     ///   - canvasColorsJson: JSON string of per-theme canvas background color overrides.
@@ -89,7 +87,6 @@ public class ActtraderChartsView: UIView {
         timeframe: String? = nil,
         duration: String? = nil,
         enableTrading: Bool = false,
-        minLots: Int = 1,
         showVolume: Bool? = nil,
         showUI: Bool? = nil,
         showDrawingTools: Bool? = nil,
@@ -106,7 +103,6 @@ public class ActtraderChartsView: UIView {
         tradeDisplayFilter: String? = nil,
         positionRenderStyle: String? = nil,
         hideLevelConfirmCancel: Bool? = nil,
-        hideQtyButton: Bool? = nil,
         showSettings: Bool? = nil,
         aggregateFrom: [String: String]? = nil,
         canvasColorsJson: String? = nil,
@@ -170,7 +166,6 @@ public class ActtraderChartsView: UIView {
             timeframe: timeframe,
             duration: duration,
             enableTrading: enableTrading,
-            minLots: minLots,
             showVolume: showVolume,
             showUI: showUI,
             showDrawingTools: showDrawingTools,
@@ -187,7 +182,6 @@ public class ActtraderChartsView: UIView {
             tradeDisplayFilter: tradeDisplayFilter,
             positionRenderStyle: positionRenderStyle,
             hideLevelConfirmCancel: hideLevelConfirmCancel,
-            hideQtyButton: hideQtyButton,
             showSettings: showSettings,
             aggregateFrom: aggregateFrom,
             canvasColorsJson: canvasColorsJson,
@@ -201,7 +195,7 @@ public class ActtraderChartsView: UIView {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("Use init(theme:symbol:series:enableTrading:minLots:) instead")
+        fatalError("Use init(theme:symbol:series:enableTrading:) instead")
     }
 
     deinit {
@@ -512,11 +506,6 @@ public class ActtraderChartsView: UIView {
     /// Updates the symbol list used by the ISIN picker modal after initial setup.
     public func setIsins(_ isins: [String]) {
         sendCommand(.setIsins(isins))
-    }
-
-    /// Updates the minimum lot size shown in the trade popover.
-    public func setMinLots(_ lots: Double) {
-        sendCommand(.setMinLots(lots))
     }
 
     /// Resets both price and time axes to their default auto-fit state.

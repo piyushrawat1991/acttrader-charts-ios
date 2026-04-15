@@ -23,7 +23,6 @@ public enum BridgeCommand {
         timeframe: String?,
         duration: String?,
         enableTrading: Bool,
-        minLots: Int,
         showVolume: Bool?,
         showUI: Bool?,
         showDrawingTools: Bool?,
@@ -40,7 +39,6 @@ public enum BridgeCommand {
         tradeDisplayFilter: String?,
         positionRenderStyle: String?,
         hideLevelConfirmCancel: Bool?,
-        hideQtyButton: Bool?,
         showSettings: Bool?,
         aggregateFrom: [String: String]?,
         canvasColorsJson: String?,
@@ -200,9 +198,6 @@ public enum BridgeCommand {
     /// Updates the symbol list used by the ISIN picker modal after initial setup.
     case setIsins([String])
 
-    /// Updates the minimum lot size shown in the trade popover.
-    case setMinLots(Double)
-
     /// Resets both price and time axes to their default auto-fit state.
     case resetView
 
@@ -220,12 +215,12 @@ public enum BridgeCommand {
         let envelope: [String: Any]
         switch self {
 
-        case let .initialize(theme, symbol, series, timeframe, duration, enableTrading, minLots,
+        case let .initialize(theme, symbol, series, timeframe, duration, enableTrading,
                              showVolume, showUI, showDrawingTools, showBidAskLines, showActLogo,
                              showCandleCountdown, candleCountdownTimeframes, disableCountdownOnMobile,
                              maxSubPanes, mobileBarDivisor, targetCandleWidth, tickClosePriceSource,
                              tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle,
-                             hideLevelConfirmCancel, hideQtyButton, showSettings,
+                             hideLevelConfirmCancel, showSettings,
                              aggregateFrom, canvasColorsJson, themeOverridesJson, labelsJson,
                              uiConfigJson, durationTimeframeMap, onSymbolClick):
             var payload: [String: Any] = ["theme": theme]
@@ -235,7 +230,6 @@ public enum BridgeCommand {
             if let duration { payload["duration"] = duration }
             if enableTrading {
                 payload["enableTrading"] = true
-                payload["minLots"] = minLots
             }
             if let showVolume { payload["showVolume"] = showVolume }
             if let showUI { payload["showUI"] = showUI }
@@ -253,7 +247,6 @@ public enum BridgeCommand {
             if let tradeDisplayFilter { payload["tradeDisplayFilter"] = tradeDisplayFilter }
             if let positionRenderStyle { payload["positionRenderStyle"] = positionRenderStyle }
             if let hideLevelConfirmCancel { payload["hideLevelConfirmCancel"] = hideLevelConfirmCancel }
-            if let hideQtyButton { payload["hideQtyButton"] = hideQtyButton }
             if let showSettings { payload["showSettings"] = showSettings }
             if let aggregateFrom { payload["aggregateFrom"] = aggregateFrom }
             if let durationTimeframeMap { payload["durationTimeframeMap"] = durationTimeframeMap }
@@ -349,19 +342,19 @@ public enum BridgeCommand {
         case let .updateLevelBracket(label, bracketType, price):
             let priceValue: Any = price ?? NSNull()
             envelope = ["type": "updateLevelBracket",
-                        "payload": ["label": label, "bracketType": bracketType, "price": priceValue]]
+                        "payload": ["label": label, "bracketType": bracketType.lowercased(), "price": priceValue]]
 
         case let .addLevelBracket(label, bracketType):
             envelope = ["type": "addLevelBracket",
-                        "payload": ["label": label, "bracketType": bracketType]]
+                        "payload": ["label": label, "bracketType": bracketType.lowercased()]]
 
         case let .addBracket(bracketType, label):
-            var payload: [String: Any] = ["bracketType": bracketType]
+            var payload: [String: Any] = ["bracketType": bracketType.lowercased()]
             if let label { payload["label"] = label }
             envelope = ["type": "addBracket", "payload": payload]
 
         case let .removeBracket(bracketType, label):
-            var payload: [String: Any] = ["bracketType": bracketType]
+            var payload: [String: Any] = ["bracketType": bracketType.lowercased()]
             if let label { payload["label"] = label }
             envelope = ["type": "removeBracket", "payload": payload]
 
@@ -395,12 +388,12 @@ public enum BridgeCommand {
         case let .updateDraftOrderBracket(bracketType, price):
             let priceValue: Any = price ?? NSNull()
             envelope = ["type": "updateDraftOrderBracket",
-                        "payload": ["bracketType": bracketType, "price": priceValue]]
+                        "payload": ["bracketType": bracketType.lowercased(), "price": priceValue]]
 
         case let .setDraftBracketPnl(bracketType, pnlText):
             let pnlValue: Any = pnlText ?? NSNull()
             envelope = ["type": "setDraftBracketPnl",
-                        "payload": ["bracketType": bracketType, "pnlText": pnlValue]]
+                        "payload": ["bracketType": bracketType.lowercased(), "pnlText": pnlValue]]
 
         // ── UI controls ───────────────────────────────────────────────────────
         case let .setVolume(show):
@@ -408,9 +401,6 @@ public enum BridgeCommand {
 
         case let .setIsins(isins):
             envelope = ["type": "setIsins", "payload": ["isins": isins]]
-
-        case let .setMinLots(lots):
-            envelope = ["type": "setMinLots", "payload": ["lots": lots]]
 
         case .resetView:
             envelope = ["type": "resetView", "payload": [:]]

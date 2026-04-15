@@ -11,7 +11,6 @@ final class BridgeCommandTests: XCTestCase {
             symbol: "EURUSD",
             series: "candlestick",
             enableTrading: false,
-            minLots: 1,
             showCandleCountdown: nil,
             disableCountdownOnMobile: nil
         )

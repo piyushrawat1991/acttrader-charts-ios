@@ -39,7 +39,13 @@ public enum BridgeCommand {
         tradeDisplayFilter: String?,
         positionRenderStyle: String?,
         hideLevelConfirmCancel: Bool?,
+        levelClusteringEnabled: Bool?,
+        clusterThresholdDistance: Int?,
+        /// Enable TFC toggle button in the top bar. When `false`, TFC is completely disabled. Default: `true`.
+        tfcEnabled: Bool?,
         showSettings: Bool?,
+        hideSymbolAndTick: Bool?,
+        showBottomBar: Bool?,
         aggregateFrom: [String: String]?,
         canvasColorsJson: String?,
         themeOverridesJson: String?,
@@ -195,6 +201,9 @@ public enum BridgeCommand {
     /// Shows or hides the volume sub-pane.
     case setVolume(Bool)
 
+    /// Toggles TFC (Trade from Charts) on or off at runtime.
+    case setTfcActive(Bool)
+
     /// Updates the symbol list used by the ISIN picker modal after initial setup.
     case setIsins([String])
 
@@ -224,7 +233,9 @@ public enum BridgeCommand {
                              showCandleCountdown, candleCountdownTimeframes, disableCountdownOnMobile,
                              maxSubPanes, mobileBarDivisor, targetCandleWidth, tickClosePriceSource,
                              tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle,
-                             hideLevelConfirmCancel, showSettings,
+                             hideLevelConfirmCancel, levelClusteringEnabled, clusterThresholdDistance,
+                             tfcEnabled, showSettings,
+                             hideSymbolAndTick, showBottomBar,
                              aggregateFrom, canvasColorsJson, themeOverridesJson, labelsJson,
                              uiConfigJson, durationTimeframeMap, onSymbolClick):
             var payload: [String: Any] = ["theme": theme]
@@ -251,7 +262,12 @@ public enum BridgeCommand {
             if let tradeDisplayFilter { payload["tradeDisplayFilter"] = tradeDisplayFilter }
             if let positionRenderStyle { payload["positionRenderStyle"] = positionRenderStyle }
             if let hideLevelConfirmCancel { payload["hideLevelConfirmCancel"] = hideLevelConfirmCancel }
+            if let levelClusteringEnabled { payload["levelClusteringEnabled"] = levelClusteringEnabled }
+            if let clusterThresholdDistance { payload["clusterThresholdDistance"] = clusterThresholdDistance }
+            if let tfcEnabled { payload["tfcEnabled"] = tfcEnabled }
             if let showSettings { payload["showSettings"] = showSettings }
+            if let hideSymbolAndTick { payload["hideSymbolAndTick"] = hideSymbolAndTick }
+            if let showBottomBar { payload["showBottomBar"] = showBottomBar }
             if let aggregateFrom { payload["aggregateFrom"] = aggregateFrom }
             if let durationTimeframeMap { payload["durationTimeframeMap"] = durationTimeframeMap }
             if let onSymbolClick, onSymbolClick { payload["onSymbolClick"] = true }
@@ -402,6 +418,9 @@ public enum BridgeCommand {
         // ── UI controls ───────────────────────────────────────────────────────
         case let .setVolume(show):
             envelope = ["type": "setVolume", "payload": ["show": show]]
+
+        case let .setTfcActive(enabled):
+            envelope = ["type": "setTfcActive", "payload": ["enabled": enabled]]
 
         case let .setIsins(isins):
             envelope = ["type": "setIsins", "payload": ["isins": isins]]

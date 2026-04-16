@@ -73,6 +73,8 @@ public class ActtraderChartsView: UIView {
     ///   - positionRenderStyle: Render style for open positions.
     ///   - hideLevelConfirmCancel: Hide on-canvas confirm/cancel buttons on TFC level edits. Defaults to `false` when `nil`.
     ///   - showSettings: Show the settings gear button in the top bar. Set to `false` to hide it entirely. Defaults to `true` when `nil`.
+    ///   - hideSymbolAndTick: Hide the symbol name, OHLC strip, and tick-activity dot overlay. Defaults to `false` when `nil`.
+    ///   - showBottomBar: Show the bottom duration-selector bar. Defaults to `false` when `nil`.
     ///   - aggregateFrom: Per-timeframe base interval override for client-side aggregation (e.g. `["1h": "1m"]`).
     ///   - canvasColorsJson: JSON string of per-theme canvas background color overrides.
     ///   - themeOverridesJson: JSON string of per-theme deep-partial color overrides.
@@ -103,7 +105,12 @@ public class ActtraderChartsView: UIView {
         tradeDisplayFilter: String? = nil,
         positionRenderStyle: String? = nil,
         hideLevelConfirmCancel: Bool? = nil,
+        levelClusteringEnabled: Bool? = nil,
+        clusterThresholdDistance: Int? = nil,
+        tfcEnabled: Bool? = nil,
         showSettings: Bool? = nil,
+        hideSymbolAndTick: Bool? = nil,
+        showBottomBar: Bool? = nil,
         aggregateFrom: [String: String]? = nil,
         canvasColorsJson: String? = nil,
         themeOverridesJson: String? = nil,
@@ -183,7 +190,12 @@ public class ActtraderChartsView: UIView {
             tradeDisplayFilter: tradeDisplayFilter,
             positionRenderStyle: positionRenderStyle,
             hideLevelConfirmCancel: hideLevelConfirmCancel,
+            levelClusteringEnabled: levelClusteringEnabled,
+            clusterThresholdDistance: clusterThresholdDistance,
+            tfcEnabled: tfcEnabled,
             showSettings: showSettings,
+            hideSymbolAndTick: hideSymbolAndTick,
+            showBottomBar: showBottomBar,
             aggregateFrom: aggregateFrom,
             canvasColorsJson: canvasColorsJson,
             themeOverridesJson: themeOverridesJson ?? themeOverrides?.toJsonString(),
@@ -270,6 +282,9 @@ public class ActtraderChartsView: UIView {
 
     /// Called when a draft order is cancelled without confirming.
     public var onDraftCancelled: ((BridgeEvent) -> Void)?
+
+    /// Called when TFC (Trade from Charts) is toggled on or off via the top bar button or API.
+    public var onTfcToggle: ((BridgeEvent) -> Void)?
 
     /// Called when the chart engine requests data for a time range.
     ///
@@ -504,6 +519,14 @@ public class ActtraderChartsView: UIView {
         sendCommand(.setVolume(show))
     }
 
+    /// Toggles TFC (Trade from Charts) on or off at runtime.
+    ///
+    /// When disabled, all trade levels, the floating trade button, and draft orders are hidden.
+    /// Re-enabling restores them. Fires `onTfcToggle` with the new state.
+    public func setTfcActive(_ enabled: Bool) {
+        sendCommand(.setTfcActive(enabled))
+    }
+
     /// Updates the symbol list used by the ISIN picker modal after initial setup.
     public func setIsins(_ isins: [String]) {
         sendCommand(.setIsins(isins))
@@ -647,6 +670,7 @@ public class ActtraderChartsView: UIView {
         case .tradeLevelBracketActivated:  onTradeLevelBracketActivated?(event)
         case .draftInitiated:              onDraftInitiated?(event)
         case .draftCancelled:      onDraftCancelled?(event)
+        case .tfcToggle:           onTfcToggle?(event)
         case .dataRequest:         onDataRequest?(event)
         case .symbolClick:         onSymbolClick?(event)
         case .error:               onError?(event)

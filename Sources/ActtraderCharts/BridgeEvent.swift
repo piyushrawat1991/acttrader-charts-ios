@@ -81,6 +81,9 @@ public enum BridgeEvent {
     /// Chart engine is requesting data for a time range; native must respond with `resolveDataRequest`.
     case dataRequest(requestId: String, timeframe: String, interval: String, start: Int64, end: Int64)
 
+    /// TFC (Trade from Charts) was toggled on or off via the top bar button or API.
+    case tfcToggle(enabled: Bool)
+
     /// User tapped the symbol name; fires when `onSymbolClick` is enabled in the init command.
     case symbolClick(symbol: String)
 
@@ -293,6 +296,9 @@ public enum BridgeEvent {
             let drEnd:   Int64 = (p["end"]   as? Int64) ?? Int64(p["end"]   as? Double ?? 0)
             return .dataRequest(requestId: requestId, timeframe: timeframe, interval: interval,
                                 start: drStart, end: drEnd)
+
+        case "tfcToggle":
+            return .tfcToggle(enabled: p["enabled"] as? Bool ?? false)
 
         case "symbolClick":
             return .symbolClick(symbol: p["symbol"] as? String ?? "")

@@ -107,6 +107,7 @@ public class ActtraderChartsView: UIView {
         aggregateFrom: [String: String]? = nil,
         canvasColorsJson: String? = nil,
         themeOverridesJson: String? = nil,
+        themeOverrides: ThemeOverrides? = nil,
         labelsJson: String? = nil,
         uiConfigJson: String? = nil,
         durationTimeframeMap: [String: String]? = nil,
@@ -185,7 +186,7 @@ public class ActtraderChartsView: UIView {
             showSettings: showSettings,
             aggregateFrom: aggregateFrom,
             canvasColorsJson: canvasColorsJson,
-            themeOverridesJson: themeOverridesJson,
+            themeOverridesJson: themeOverridesJson ?? themeOverrides?.toJsonString(),
             labelsJson: labelsJson,
             uiConfigJson: uiConfigJson,
             durationTimeframeMap: durationTimeframeMap,
@@ -522,6 +523,12 @@ public class ActtraderChartsView: UIView {
     /// - Parameter overridesJson: Raw JSON string, e.g. `{"dark":{"background":"#111"}}`.
     public func setThemeOverrides(_ overridesJson: String) {
         sendCommand(.setThemeOverrides(overridesJson))
+    }
+
+    /// Updates per-theme deep-partial color overrides and rebuilds the active theme.
+    /// - Parameter overrides: Typed theme overrides — only the keys you supply are replaced.
+    public func setThemeOverrides(_ overrides: ThemeOverrides) {
+        sendCommand(.setThemeOverrides(overrides.toJsonString()))
     }
 
     /// Replaces a specific bar with authoritative OHLCV data (e.g. a correction from the server).

@@ -90,6 +90,7 @@ ActtraderChartsView.prewarm()
 | `enableTrading` | `Bool` | `false` | Show the floating buy/sell order button |
 | `minLots` | `Int?` | `nil` | Minimum lot size for order entry (requires `enableTrading`) |
 | `maxSubPanes` | `Int?` | `nil` | Max simultaneous oscillator sub-panes |
+| `prefetchThreshold` | `Int?` | `nil` | Bars from start of data at which historical fetch triggers (min 20, default 80) |
 | `mobileBarDivisor` | `Int?` | `nil` | Divide desktop bar count on touch (`2`, `3`, or `4`) |
 | `targetCandleWidth` | `Double?` | `nil` | Target px width per candle for auto-calculating initial bar count |
 | `tickClosePriceSource` | `String?` | `nil` | `"bid"` or `"ask"` for live tick close/high/low |
@@ -97,9 +98,44 @@ ActtraderChartsView.prewarm()
 | `tradeDisplayFilter` | `String?` | `nil` | Which TFC levels are visible: `"all"` · `"positions"` · `"orders"` · `"none"` |
 | `positionRenderStyle` | `String?` | `nil` | Force position render style: `"line"` or `"dot"` |
 | `hideLevelConfirmCancel` | `Bool?` | `nil` | Hide on-canvas ✓/✗ confirm/cancel buttons for TFC level edits |
+| `levelClusteringEnabled` | `Bool?` | `true` | Enable trade-level fan-out clustering; overlapping levels group into expandable badges |
+| `clusterThresholdDistance` | `Int?` | `20` | Pixel proximity threshold for clustering (only when `levelClusteringEnabled` is `true`) |
 | `hideQtyButton` | `Bool?` | `nil` | Hide the floating Qty input overlay on draft orders |
+| `tfcEnabled` | `Bool?` | `nil` (`true`) | Enable the TFC toggle button in the top bar. When `false`, TFC is completely disabled — the toggle button is hidden and all trade levels, draft orders, and the floating trade button are suppressed |
 | `showSettings` | `Bool?` | `nil` | Show the settings gear button in the top bar; set to `false` to hide it entirely |
+| `hideSymbolAndTick` | `Bool?` | `nil` | Hide the symbol name, OHLC strip, and tick-activity dot overlay |
+| `showBottomBar` | `Bool?` | `nil` | Show the bottom duration-selector bar (hidden by default) |
 | `uiConfigJson` | `String?` | `nil` | Per-component UI configuration overrides (font sizes, icon sizes, spacing) as a raw JSON string. See *Mobile icon sizing* below. |
+| `themeOverrides` | `ThemeOverrides?` | `nil` | Typed per-theme color overrides. See *Theme overrides* below. |
+
+### Theme overrides
+
+Use `themeOverrides` (in the constructor) or `setThemeOverrides(_:)` to selectively override colors for each theme mode. Only the keys you supply are merged on top of the built-in dark/light themes.
+
+```swift
+// At init time
+let chart = ActtraderChartsView(
+    theme: "dark",
+    symbol: "EURUSD",
+    themeOverrides: ThemeOverrides(
+        dark: ChartThemeOverride(
+            background: "#0a0a0a",
+            candle: CandleColors(up: "#00e676", down: "#ff1744"),
+            topBar: TopBarColors(btnColor: "#cccccc")
+        )
+    )
+)
+
+// Or update at runtime
+chart.setThemeOverrides(ThemeOverrides(
+    dark: ChartThemeOverride(background: "#111111"),
+    light: ChartThemeOverride(background: "#fafafa")
+))
+```
+
+All properties at every level are optional — only supply the ones you want to change. Available nested types: `TooltipColors`, `CandleColors`, `VolumeColors`, `UiColors`, `StreamColors`, `DrawingToolbarColors`, `TopBarColors`, `BottomBarColors`, `IndicatorOverlayColors`, `TradeLevelColors`, `TradePanelColors`.
+
+> Raw JSON strings are still supported via `themeOverridesJson` / `setThemeOverrides(jsonString)` for backward compatibility.
 
 ### Mobile icon sizing
 
@@ -163,6 +199,7 @@ chart.initialize(
 | `removeBracket(bracketType:label:)` | Unified bracket removal — pass `label` for an existing order/position, omit it for the active draft order |
 | `cancelLevelEdit(_:)` | Cancel an in-progress level edit, reverting to last confirmed price |
 | `selectLevel(_:)` | Programmatically highlight a level; pass `nil` to deselect all |
+| | **Off-viewport indicators:** When a level's entry/SL/TP is outside the visible price range, a `▲ N` / `▼ N` pill appears near the chart's right edge. Tapping the pill smooth-scrolls the nearest off-screen marker to center. This is automatic — no configuration needed. |
 | **TFC — Draft Orders** | |
 | `showDraftOrder(price:side:orderType:)` | Show a draggable limit or stop draft order line |
 | `showMarketDraft(price:side:)` | Show a non-draggable market-order preview line |
@@ -173,12 +210,13 @@ chart.initialize(
 | `updateDraftOrderBracket(bracketType:price:)` | Update or remove a SL/TP bracket on the draft order; pass `nil` to remove |
 | `setDraftBracketPnl(bracketType:pnlText:)` | Display estimated P&L text next to the draft order's SL or TP bracket line; pass `nil` to clear |
 | **UI / Utility** | |
+| `setTfcActive(_:)` | Toggle TFC (Trade from Charts) on or off at runtime. Hides/shows all trade levels, draft orders, and the floating trade button. Fires `onTfcToggle` |
 | `setVolume(_:)` | Show or hide the volume sub-pane |
 | `setIsins(_:)` | Update the symbol list used by the ISIN picker |
 | `setMinLots(_:)` | Update the minimum lot size in the trade popover |
 | `resetView()` | Reset price and time axes to auto-fit |
 | `setLoading(_:)` | Show or hide the loading overlay |
-| `setThemeOverrides(_:)` | Update per-theme deep-partial color overrides at runtime (raw JSON string) |
+| `setThemeOverrides(_:)` | Update per-theme color overrides at runtime — accepts typed `ThemeOverrides` or raw JSON string |
 | `correctBar(barTime:bar:)` | Replace a specific bar with authoritative OHLCV data (e.g. server correction) |
 
 ### Events (callbacks)
@@ -206,6 +244,7 @@ chart.initialize(
 | `onTradeLevelConfirmed` | Chart ✓ button confirmed an edit — payload includes `label`, `type`, `isFullscreen` |
 | `onDraftInitiated` | New draft order shown — payload includes `side`, `price`, `orderType`, `isFullscreen` |
 | `onDraftCancelled` | Draft order cancelled — payload includes `label`, `isFullscreen` |
+| `onTfcToggle` | TFC toggled on or off — payload includes `enabled: Bool` |
 | `onDataRequest` | Chart requests data for a time range — payload includes `requestId`, `from`, `to`, `timeframe`; call `resolveDataRequest` to respond |
 | `onSymbolClick` | User tapped the symbol name (requires `onSymbolClick: true` in `init`) |
 | `onError` | Engine error |

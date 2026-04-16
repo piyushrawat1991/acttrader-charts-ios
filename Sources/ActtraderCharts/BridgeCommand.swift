@@ -204,6 +204,10 @@ public enum BridgeCommand {
     /// Shows or hides the loading overlay.
     case setLoading(Bool)
 
+    /// Updates per-theme deep-partial color overrides and rebuilds the active theme.
+    /// - Parameter overridesJson: Raw JSON string, e.g. `{"dark":{"background":"#111"}}`.
+    case setThemeOverrides(String)
+
     /// Replaces a specific bar with authoritative OHLCV data (e.g. a correction from the server).
     /// - Parameter barTime: Unix millisecond timestamp of the bar to replace.
     case correctBar(barTime: Int64, bar: OHLCVBar)
@@ -407,6 +411,14 @@ public enum BridgeCommand {
 
         case let .setLoading(loading):
             envelope = ["type": "setLoading", "payload": ["loading": loading]]
+
+        case let .setThemeOverrides(overridesJson):
+            var payload: [String: Any] = [:]
+            if let jsonData = overridesJson.data(using: .utf8),
+               let parsed = try? JSONSerialization.jsonObject(with: jsonData) {
+                payload["overrides"] = parsed
+            }
+            envelope = ["type": "setThemeOverrides", "payload": payload]
 
         case let .correctBar(barTime, bar):
             let barObj: [String: Any] = [

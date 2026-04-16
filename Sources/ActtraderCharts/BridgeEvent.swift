@@ -90,6 +90,10 @@ public enum BridgeEvent {
     // ── Parser ────────────────────────────────────────────────────────────────
 
     /// Parses a raw JSON string received from the WebView into a `BridgeEvent`.
+    ///
+    /// The bridge sends `{ "type": "...", "payload": { ... } }`.  All fields
+    /// are read from the nested `payload` object.
+    ///
     /// Returns `nil` for malformed or unrecognised messages.
     public static func parse(_ json: String) -> BridgeEvent? {
         guard
@@ -98,14 +102,17 @@ public enum BridgeEvent {
             let type = obj["type"] as? String
         else { return nil }
 
+        // Every event except "ready" carries a payload object.
+        let p = obj["payload"] as? [String: Any] ?? [:]
+
         switch type {
 
         case "ready":
             return .ready
 
         case "crosshair":
-            guard let bar = obj["bar"] as? [String: Any] else { return nil }
-            let pos = obj["position"] as? [String: Any]
+            guard let bar = p["bar"] as? [String: Any] else { return nil }
+            let pos = p["position"] as? [String: Any]
             let chTime: Int64 = (bar["time"] as? Int64) ?? Int64(bar["time"] as? Double ?? 0)
             let chOpen:   Double = bar["open"]   as? Double ?? 0
             let chHigh:   Double = bar["high"]   as? Double ?? 0
@@ -118,7 +125,7 @@ public enum BridgeEvent {
                               close: chClose, volume: chVol, x: chX, y: chY)
 
         case "barClick":
-            guard let bar = obj["bar"] as? [String: Any] else { return nil }
+            guard let bar = p["bar"] as? [String: Any] else { return nil }
             let bcTime:  Int64  = (bar["time"] as? Int64) ?? Int64(bar["time"] as? Double ?? 0)
             let bcOpen:  Double = bar["open"]   as? Double ?? 0
             let bcHigh:  Double = bar["high"]   as? Double ?? 0
@@ -129,7 +136,7 @@ public enum BridgeEvent {
                              close: bcClose, volume: bcVol)
 
         case "viewportChange":
-            guard let vp = obj["viewport"] as? [String: Any] else { return nil }
+            guard let vp = p["viewport"] as? [String: Any] else { return nil }
             return .viewportChange(
                 startIndex: vp["startIndex"] as? Int ?? 0,
                 endIndex:   vp["endIndex"]   as? Int ?? 0,
@@ -137,20 +144,20 @@ public enum BridgeEvent {
             )
 
         case "seriesChange":
-            guard let series = obj["series"] as? String else { return nil }
+            guard let series = p["series"] as? String else { return nil }
             return .seriesChange(series)
 
         case "timeframeChange":
-            guard let tf = obj["timeframe"] as? String else { return nil }
+            guard let tf = p["timeframe"] as? String else { return nil }
             return .timeframeChange(tf)
 
         case "durationChange":
-            guard let dur = obj["duration"] as? String else { return nil }
+            guard let dur = p["duration"] as? String else { return nil }
             return .durationChange(dur)
 
         case "stateChange":
             guard
-                let state = obj["state"],
+                let state = p["state"],
                 let stateData = try? JSONSerialization.data(withJSONObject: state),
                 let stateJson = String(data: stateData, encoding: .utf8)
             else { return nil }
@@ -158,17 +165,16 @@ public enum BridgeEvent {
 
         case "stateSnapshot":
             guard
-                let state = obj["state"],
-                let stateData = try? JSONSerialization.data(withJSONObject: state),
+                let stateData = try? JSONSerialization.data(withJSONObject: p),
                 let stateJson = String(data: stateData, encoding: .utf8)
             else { return nil }
             return .stateSnapshot(stateJson)
 
         case "dataLoaded":
-            return .dataLoaded(barCount: obj["barCount"] as? Int ?? 0)
+            return .dataLoaded(barCount: p["barCount"] as? Int ?? 0)
 
         case "newBar":
-            guard let bar = obj["bar"] as? [String: Any] else { return nil }
+            guard let bar = p["completedBar"] as? [String: Any] else { return nil }
             let nbTime:  Int64  = (bar["time"] as? Int64) ?? Int64(bar["time"] as? Double ?? 0)
             let nbOpen:  Double = bar["open"]   as? Double ?? 0
             let nbHigh:  Double = bar["high"]   as? Double ?? 0
@@ -179,19 +185,17 @@ public enum BridgeEvent {
                            close: nbClose, volume: nbVol)
 
         case "streamStatus":
-            guard let status = obj["status"] as? String else { return nil }
+            guard let status = p["status"] as? String else { return nil }
             return .streamStatus(status)
 
         case "placeOrder":
-            guard let payload = obj["payload"] as? [String: Any] else { return nil }
             return .placeOrder(
-                price:     payload["price"]     as? Double ?? 0,
-                side:      payload["side"]      as? String ?? "",
-                orderType: payload["orderType"] as? String ?? "limit"
+                price:     p["price"]     as? Double ?? 0,
+                side:      p["side"]      as? String ?? "",
+                orderType: p["orderType"] as? String ?? "limit"
             )
 
         case "tradeLevelClose":
-            guard let p = obj["payload"] as? [String: Any] else { return nil }
             let tlcData = p["data"].flatMap { try? JSONSerialization.data(withJSONObject: $0) }
                 .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
             return .tradeLevelClose(
@@ -204,7 +208,6 @@ public enum BridgeEvent {
             )
 
         case "tradeLevelDrag":
-            guard let p = obj["payload"] as? [String: Any] else { return nil }
             let tldData = p["data"].flatMap { try? JSONSerialization.data(withJSONObject: $0) }
                 .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
             return .tradeLevelDrag(
@@ -216,7 +219,6 @@ public enum BridgeEvent {
             )
 
         case "tradeLevelEdit":
-            guard let p = obj["payload"] as? [String: Any] else { return nil }
             let tleData = p["data"].flatMap { try? JSONSerialization.data(withJSONObject: $0) }
                 .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
             let rawChanges = p["changes"] as? [[String: Any]] ?? []
@@ -239,7 +241,6 @@ public enum BridgeEvent {
             )
 
         case "tradeLevelConfirmed":
-            guard let p = obj["payload"] as? [String: Any] else { return nil }
             return .tradeLevelConfirmed(
                 label:        p["label"]        as? String ?? "",
                 type:         p["type"]         as? String ?? "",
@@ -247,7 +248,6 @@ public enum BridgeEvent {
             )
 
         case "tradeLevelEditOpen":
-            guard let p = obj["payload"] as? [String: Any] else { return nil }
             let tleoData = p["data"].flatMap { try? JSONSerialization.data(withJSONObject: $0) }
                 .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
             return .tradeLevelEditOpen(
@@ -262,7 +262,6 @@ public enum BridgeEvent {
             )
 
         case "tradeLevelBracketActivated":
-            guard let p = obj["payload"] as? [String: Any] else { return nil }
             return .tradeLevelBracketActivated(
                 label:        p["label"]        as? String ?? "",
                 bracketType:  p["bracketType"]  as? String ?? "",
@@ -271,7 +270,6 @@ public enum BridgeEvent {
             )
 
         case "draftInitiated":
-            guard let p = obj["payload"] as? [String: Any] else { return nil }
             return .draftInitiated(
                 side:         p["side"]         as? String ?? "",
                 price:        p["price"]        as? Double ?? 0,
@@ -280,7 +278,6 @@ public enum BridgeEvent {
             )
 
         case "draftCancelled":
-            guard let p = obj["payload"] as? [String: Any] else { return nil }
             return .draftCancelled(
                 label:        p["label"]        as? String ?? "",
                 isFullscreen: p["isFullscreen"] as? Bool ?? false
@@ -288,7 +285,6 @@ public enum BridgeEvent {
 
         case "dataRequest":
             guard
-                let p          = obj["payload"] as? [String: Any],
                 let requestId  = p["requestId"] as? String,
                 let timeframe  = p["timeframe"] as? String,
                 let interval   = p["interval"]  as? String
@@ -299,11 +295,11 @@ public enum BridgeEvent {
                                 start: drStart, end: drEnd)
 
         case "symbolClick":
-            return .symbolClick(symbol: obj["symbol"] as? String ?? "")
+            return .symbolClick(symbol: p["symbol"] as? String ?? "")
 
         case "error":
-            let message = obj["message"] as? String ?? "Unknown error"
-            let code    = obj["code"]    as? String
+            let message = p["message"] as? String ?? "Unknown error"
+            let code    = p["code"]    as? String
             return .error(message: message, code: code?.isEmpty == false ? code : nil)
 
         default:

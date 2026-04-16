@@ -80,7 +80,7 @@ ActtraderChartsView.prewarm()
 | `timeframe` | `String?` | `nil` | Initial timeframe (e.g. `"1m"`, `"5m"`, `"1h"`, `"1D"`) |
 | `duration` | `String?` | `nil` | Initial duration button (e.g. `"1D"`, `"1M"`, `"1Y"`, `"All"`) |
 | `showVolume` | `Bool?` | `nil` | Show volume bars |
-| `showUI` | `Bool?` | `nil` | Show top / bottom bars |
+| `showUI` | `Bool?` | `nil` | Show top / bottom bars. When `false`, the loading overlay is also suppressed |
 | `showDrawingTools` | `Bool?` | `nil` | Show drawing toolbar and pencil button |
 | `showBidAskLines` | `Bool?` | `nil` | Show bid and ask as dashed lines during a live stream |
 | `showActLogo` | `Bool?` | `nil` | Show ACT watermark logo |
@@ -99,6 +99,40 @@ ActtraderChartsView.prewarm()
 | `hideLevelConfirmCancel` | `Bool?` | `nil` | Hide on-canvas ✓/✗ confirm/cancel buttons for TFC level edits |
 | `hideQtyButton` | `Bool?` | `nil` | Hide the floating Qty input overlay on draft orders |
 | `showSettings` | `Bool?` | `nil` | Show the settings gear button in the top bar; set to `false` to hide it entirely |
+| `uiConfigJson` | `String?` | `nil` | Per-component UI configuration overrides (font sizes, icon sizes, spacing) as a raw JSON string. See *Mobile icon sizing* below. |
+
+### Mobile icon sizing
+
+The chart automatically bumps top-bar icon buttons (settings, fullscreen, drawing toggle) and the floating trade ⊕ button to larger sizes when the container width drops below `uiConfig.drawingToolbar.mobileBreakpoint` (default `480px`). Defaults:
+
+| Element | Desktop | Mobile |
+|---------|---------|--------|
+| Top-bar icon button container | 26px | 28px |
+| Top-bar icon SVG | 14–15px | 16–17px |
+| Trade ⊕ button container | 22px | 24px |
+| Trade ⊕ icon SVG | 14px | 16px |
+
+Override via `uiConfigJson`:
+
+```swift
+chart.initialize(
+    theme: "dark",
+    symbol: "AAPL",
+    enableTrading: true,
+    uiConfigJson: """
+    {
+      "topBar": {
+        "mobileIconBtnSize": "30px",
+        "mobileDrawBtnIconSize": "18px"
+      },
+      "tradeButton": {
+        "mobileSize": 26,
+        "mobileIconSize": 18
+      }
+    }
+    """
+)
+```
 
 ### Commands
 
@@ -144,6 +178,7 @@ ActtraderChartsView.prewarm()
 | `setMinLots(_:)` | Update the minimum lot size in the trade popover |
 | `resetView()` | Reset price and time axes to auto-fit |
 | `setLoading(_:)` | Show or hide the loading overlay |
+| `setThemeOverrides(_:)` | Update per-theme deep-partial color overrides at runtime (raw JSON string) |
 | `correctBar(barTime:bar:)` | Replace a specific bar with authoritative OHLCV data (e.g. server correction) |
 
 ### Events (callbacks)

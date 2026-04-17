@@ -92,6 +92,10 @@ ActtraderChartsView.prewarm()
 | `maxSubPanes` | `Int?` | `nil` | Max simultaneous oscillator sub-panes |
 | `prefetchThreshold` | `Int?` | `nil` | Bars from start of data at which historical fetch triggers (min 20, default 80) |
 | `mobileBarDivisor` | `Int?` | `nil` | Divide desktop bar count on touch (`2`, `3`, or `4`) |
+| `momentumScrollEnabled` | `Bool?` | `nil` | Enable momentum (kinetic) scrolling — chart coasts after a fast flick. Default: `true`. Note: momentum runs in the JS layer, not `UIScrollView` |
+| `momentumDecay` | `Double?` | `nil` | Per-frame velocity decay, normalised to 60 fps. Clamped `[0.80, 0.99]`. Default: `0.95` |
+| `momentumThreshold` | `Double?` | `nil` | Min release velocity (px/ms) to launch momentum. Default: `0.3` |
+| `momentumMaxVelocity` | `Double?` | `nil` | Max launch velocity (px/ms). Default: `6.0` |
 | `targetCandleWidth` | `Double?` | `nil` | Target px width per candle for auto-calculating initial bar count |
 | `tickClosePriceSource` | `String?` | `nil` | `"bid"` or `"ask"` for live tick close/high/low |
 | `tradesThresholdForHorizontalLine` | `Int?` | `nil` | Level count above which render auto-switches to dot mode |
@@ -101,6 +105,9 @@ ActtraderChartsView.prewarm()
 | `levelClusteringEnabled` | `Bool?` | `true` | Enable trade-level fan-out clustering; overlapping levels group into expandable badges |
 | `clusterThresholdDistance` | `Int?` | `20` | Pixel proximity threshold for clustering (only when `levelClusteringEnabled` is `true`) |
 | `hideQtyButton` | `Bool?` | `nil` | Hide the floating Qty input overlay on draft orders |
+| `showQuantityField` | `Bool?` | `nil` (`false`) | Render an editable QTY pill at the left of the draft order info box. Tapping opens a flyout input to edit the quantity before submitting |
+| `quantityFieldMinLots` | `Double?` | `nil` (`1.0`) | Minimum lot size, step size, and initial quantity for the QTY flyout (only used when `showQuantityField = true`) |
+| `quantityFieldMaxLots` | `Double?` | `nil` (`100.0`) | Maximum lot size for the QTY flyout (only used when `showQuantityField = true`) |
 | `tfcEnabled` | `Bool?` | `nil` (`true`) | Enable the TFC toggle button in the top bar. When `false`, TFC is completely disabled — the toggle button is hidden and all trade levels, draft orders, and the floating trade button are suppressed |
 | `showSettings` | `Bool?` | `nil` | Show the settings gear button in the top bar; set to `false` to hide it entirely |
 | `hideSymbolAndTick` | `Bool?` | `nil` | Hide the symbol name, OHLC strip, and tick-activity dot overlay |

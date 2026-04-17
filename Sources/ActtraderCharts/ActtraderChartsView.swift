@@ -66,6 +66,10 @@ public class ActtraderChartsView: UIView {
     ///   - disableCountdownOnMobile: Suppress the countdown specifically on mobile.
     ///   - maxSubPanes: Maximum number of indicator sub-panes (oscillators). Defaults to 3 when `nil`.
     ///   - mobileBarDivisor: Bar density divisor for mobile (2, 3, or 4). Defaults to 2 when `nil`.
+    ///   - momentumScrollEnabled: Enable momentum (kinetic) scrolling on drag release. Defaults to `true` when `nil`.
+    ///   - momentumDecay: Per-frame velocity decay factor, normalised to 60 fps. Clamped to [0.80, 0.99]. Defaults to `0.95` when `nil`.
+    ///   - momentumThreshold: Minimum release velocity (px/ms) to trigger momentum. Defaults to `0.3` when `nil`.
+    ///   - momentumMaxVelocity: Maximum launch velocity (px/ms) for momentum. Defaults to `6.0` when `nil`.
     ///   - targetCandleWidth: Target candle width in pixels. Defaults to 10 when `nil`.
     ///   - tickClosePriceSource: Price source for tick close (`"bid"` or `"ask"`). Defaults to `"bid"` when `nil`.
     ///   - tradesThresholdForHorizontalLine: Min trade count to render a horizontal level line.
@@ -99,6 +103,10 @@ public class ActtraderChartsView: UIView {
         disableCountdownOnMobile: Bool? = nil,
         maxSubPanes: Int? = nil,
         mobileBarDivisor: Int? = nil,
+        momentumScrollEnabled: Bool? = nil,
+        momentumDecay: Double? = nil,
+        momentumThreshold: Double? = nil,
+        momentumMaxVelocity: Double? = nil,
         targetCandleWidth: Double? = nil,
         tickClosePriceSource: String? = nil,
         tradesThresholdForHorizontalLine: Int? = nil,
@@ -184,6 +192,10 @@ public class ActtraderChartsView: UIView {
             disableCountdownOnMobile: disableCountdownOnMobile,
             maxSubPanes: maxSubPanes,
             mobileBarDivisor: mobileBarDivisor,
+            momentumScrollEnabled: momentumScrollEnabled,
+            momentumDecay: momentumDecay,
+            momentumThreshold: momentumThreshold,
+            momentumMaxVelocity: momentumMaxVelocity,
             targetCandleWidth: targetCandleWidth,
             tickClosePriceSource: tickClosePriceSource,
             tradesThresholdForHorizontalLine: tradesThresholdForHorizontalLine,

@@ -33,6 +33,14 @@ public enum BridgeCommand {
         disableCountdownOnMobile: Bool?,
         maxSubPanes: Int?,
         mobileBarDivisor: Int?,
+        /// Enable momentum (kinetic) scrolling on drag release. Default: `true`.
+        momentumScrollEnabled: Bool?,
+        /// Per-frame velocity decay factor, normalised to 60 fps. Clamped [0.80, 0.99]. Default: `0.95`.
+        momentumDecay: Double?,
+        /// Minimum release velocity (px/ms) to trigger momentum. Default: `0.3`.
+        momentumThreshold: Double?,
+        /// Maximum launch velocity (px/ms) for momentum. Default: `6.0`.
+        momentumMaxVelocity: Double?,
         targetCandleWidth: Double?,
         tickClosePriceSource: String?,
         tradesThresholdForHorizontalLine: Int?,
@@ -231,7 +239,9 @@ public enum BridgeCommand {
         case let .initialize(theme, symbol, series, timeframe, duration, enableTrading,
                              showVolume, showUI, showDrawingTools, showBidAskLines, showActLogo,
                              showCandleCountdown, candleCountdownTimeframes, disableCountdownOnMobile,
-                             maxSubPanes, mobileBarDivisor, targetCandleWidth, tickClosePriceSource,
+                             maxSubPanes, mobileBarDivisor,
+                             momentumScrollEnabled, momentumDecay, momentumThreshold, momentumMaxVelocity,
+                             targetCandleWidth, tickClosePriceSource,
                              tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle,
                              hideLevelConfirmCancel, levelClusteringEnabled, clusterThresholdDistance,
                              tfcEnabled, showSettings,
@@ -256,6 +266,10 @@ public enum BridgeCommand {
             if let disableCountdownOnMobile { payload["disableCountdownOnMobile"] = disableCountdownOnMobile }
             if let maxSubPanes { payload["maxSubPanes"] = maxSubPanes }
             if let mobileBarDivisor { payload["mobileBarDivisor"] = mobileBarDivisor }
+            if let momentumScrollEnabled { payload["momentumScrollEnabled"] = momentumScrollEnabled }
+            if let momentumDecay { payload["momentumDecay"] = momentumDecay }
+            if let momentumThreshold { payload["momentumThreshold"] = momentumThreshold }
+            if let momentumMaxVelocity { payload["momentumMaxVelocity"] = momentumMaxVelocity }
             if let targetCandleWidth { payload["targetCandleWidth"] = targetCandleWidth }
             if let tickClosePriceSource { payload["tickClosePriceSource"] = tickClosePriceSource }
             if let tradesThresholdForHorizontalLine { payload["tradesThresholdForHorizontalLine"] = tradesThresholdForHorizontalLine }

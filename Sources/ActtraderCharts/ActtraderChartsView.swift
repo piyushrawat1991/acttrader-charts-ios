@@ -43,6 +43,7 @@ public class ActtraderChartsView: UIView {
 
     private var pendingCommands: [String] = []
     private var isReady = false
+    private var hasCalledOnReady = false
     private let queueLock = NSLock()
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -86,6 +87,10 @@ public class ActtraderChartsView: UIView {
     ///   - uiConfigJson: JSON string of per-component UI configuration overrides (font sizes, spacing).
     ///   - durationTimeframeMap: Override the default duration → timeframe pairings for the bottom bar.
     ///   - onSymbolClick: When `true`, fires a `symbolClick` event on symbol tap instead of opening the picker modal.
+    ///   - initialState: Raw JSON string from a prior `onStateSnapshot` callback. When provided, the full
+    ///     chart state (timeframe, series, indicators, drawings, etc.) is restored atomically alongside the
+    ///     `init` command — both are queued before the WebView fires `ready` and flushed in a single
+    ///     `evaluateJavaScript` call, so there is no intermediate "1D" flash.
     public init(
         theme: String = "dark",
         symbol: String? = nil,
@@ -126,7 +131,10 @@ public class ActtraderChartsView: UIView {
         labelsJson: String? = nil,
         uiConfigJson: String? = nil,
         durationTimeframeMap: [String: String]? = nil,
-        onSymbolClick: Bool? = nil
+        onSymbolClick: Bool? = nil,
+        /// IANA timezone string for time-axis and crosshair labels. Default: `"UTC"`.
+        timezone: String? = nil,
+        initialState: String? = nil
     ) {
         // Build WKWebView configuration
         let config = WKWebViewConfiguration()
@@ -214,8 +222,15 @@ public class ActtraderChartsView: UIView {
             labelsJson: labelsJson,
             uiConfigJson: uiConfigJson,
             durationTimeframeMap: durationTimeframeMap,
-            onSymbolClick: onSymbolClick
+            onSymbolClick: onSymbolClick,
+            timezone: timezone
         ))
+
+        // Queue state restoration alongside the init command so both are evaluated
+        // in a single evaluateJavaScript call when the WebView fires `ready`.
+        // This prevents the engine from briefly rendering with its "1D" default
+        // before the saved timeframe, series, and indicators are applied.
+        if let initialState { sendCommand(.setState(initialState)) }
     }
 
     @available(*, unavailable)
@@ -329,6 +344,12 @@ public class ActtraderChartsView: UIView {
         webView.scrollView.backgroundColor = webView.backgroundColor
         webView.overrideUserInterfaceStyle = theme == "light" ? .light : .dark
         sendCommand(.setTheme(theme))
+    }
+
+    /// Changes the display timezone for time-axis and crosshair labels.
+    /// Accepts any IANA string (e.g. `"America/New_York"`), `"UTC"`, or `"local"`.
+    public func setTimezone(_ timezone: String) {
+        sendCommand(.setTimezone(timezone))
     }
 
     /// Changes the chart series type.
@@ -661,7 +682,10 @@ public class ActtraderChartsView: UIView {
             UIView.animate(withDuration: 0.2) { self.skeletonView.alpha = 0 } completion: { _ in
                 self.skeletonView.isHidden = true
             }
-            onReady?()
+            if !hasCalledOnReady {
+                hasCalledOnReady = true
+                onReady?()
+            }
         case .crosshair:    onCrosshair?(event)
         case .barClick:     onBarClick?(event)
         case .viewportChange: onViewportChange?(event)

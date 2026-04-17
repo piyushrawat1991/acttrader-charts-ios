@@ -114,6 +114,27 @@ ActtraderChartsView.prewarm()
 | `showBottomBar` | `Bool?` | `nil` | Show the bottom duration-selector bar (hidden by default) |
 | `uiConfigJson` | `String?` | `nil` | Per-component UI configuration overrides (font sizes, icon sizes, spacing) as a raw JSON string. See *Mobile icon sizing* below. |
 | `themeOverrides` | `ThemeOverrides?` | `nil` | Typed per-theme color overrides. See *Theme overrides* below. |
+| `initialState` | `String?` | `nil` | Raw JSON from a prior `onStateSnapshot` to restore atomically at init (timeframe, series, indicators, drawings). See *Restoring state without a flash* below. |
+
+### Restoring state without a flash
+
+When you need to restore a previously saved chart state (e.g. user re-opens the chart screen), pass the snapshot JSON as `initialState` instead of calling `setState()` inside `onReady`:
+
+```swift
+// ✅ Correct — init + setState are queued together and flushed atomically;
+//    the engine never renders a frame with the default "1D" timeframe.
+let chart = ActtraderChartsView(
+    theme: "dark",
+    symbol: "EURUSD",
+    initialState: savedStateJson
+)
+
+// ❌ Avoid — setState fires after the chart has already rendered once with "1D".
+let chart = ActtraderChartsView(theme: "dark", symbol: "EURUSD")
+chart.onReady = { chart.setState(savedStateJson) }
+```
+
+For simple cases where you only need to set a specific timeframe (without full state restore), use the `timeframe` constructor parameter directly — no `initialState` required.
 
 ### Theme overrides
 

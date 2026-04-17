@@ -60,7 +60,9 @@ public enum BridgeCommand {
         labelsJson: String?,
         uiConfigJson: String?,
         durationTimeframeMap: [String: String]?,
-        onSymbolClick: Bool?
+        onSymbolClick: Bool?,
+        /// IANA timezone string for time-axis and crosshair labels. Default: `"UTC"`.
+        timezone: String?
     )
 
     /// Replaces the full dataset.
@@ -73,6 +75,10 @@ public enum BridgeCommand {
 
     /// Switches between `"dark"` and `"light"` themes.
     case setTheme(String)
+
+    /// Changes the display timezone for time-axis and crosshair labels.
+    /// Accepts any IANA string (e.g. `"America/New_York"`), `"UTC"`, or `"local"`.
+    case setTimezone(String)
 
     /// Changes the chart series type (e.g. `"candlestick"`, `"line"`, `"area"`).
     case setSeries(String)
@@ -247,7 +253,7 @@ public enum BridgeCommand {
                              tfcEnabled, showSettings,
                              hideSymbolAndTick, showBottomBar,
                              aggregateFrom, canvasColorsJson, themeOverridesJson, labelsJson,
-                             uiConfigJson, durationTimeframeMap, onSymbolClick):
+                             uiConfigJson, durationTimeframeMap, onSymbolClick, timezone):
             var payload: [String: Any] = ["theme": theme]
             if let symbol { payload["symbol"] = symbol }
             if let series { payload["series"] = series }
@@ -285,6 +291,7 @@ public enum BridgeCommand {
             if let aggregateFrom { payload["aggregateFrom"] = aggregateFrom }
             if let durationTimeframeMap { payload["durationTimeframeMap"] = durationTimeframeMap }
             if let onSymbolClick, onSymbolClick { payload["onSymbolClick"] = true }
+            if let timezone { payload["timezone"] = timezone }
             func embedJson(_ key: String, _ json: String?) {
                 guard let json,
                       let data = json.data(using: .utf8),
@@ -310,6 +317,9 @@ public enum BridgeCommand {
 
         case let .setTheme(theme):
             envelope = ["type": "setTheme", "payload": ["theme": theme]]
+
+        case let .setTimezone(tz):
+            envelope = ["type": "setTimezone", "payload": ["timezone": tz]]
 
         case let .setSeries(series):
             envelope = ["type": "setSeries", "payload": ["series": series]]

@@ -33,6 +33,14 @@ public enum BridgeCommand {
         disableCountdownOnMobile: Bool?,
         maxSubPanes: Int?,
         mobileBarDivisor: Int?,
+        /// Enable momentum (kinetic) scrolling on drag release. Default: `true`.
+        momentumScrollEnabled: Bool?,
+        /// Per-frame velocity decay factor, normalised to 60 fps. Clamped [0.80, 0.99]. Default: `0.95`.
+        momentumDecay: Double?,
+        /// Minimum release velocity (px/ms) to trigger momentum. Default: `0.3`.
+        momentumThreshold: Double?,
+        /// Maximum launch velocity (px/ms) for momentum. Default: `6.0`.
+        momentumMaxVelocity: Double?,
         targetCandleWidth: Double?,
         tickClosePriceSource: String?,
         tradesThresholdForHorizontalLine: Int?,
@@ -52,7 +60,9 @@ public enum BridgeCommand {
         labelsJson: String?,
         uiConfigJson: String?,
         durationTimeframeMap: [String: String]?,
-        onSymbolClick: Bool?
+        onSymbolClick: Bool?,
+        /// IANA timezone string for time-axis and crosshair labels. Default: `"UTC"`.
+        timezone: String?
     )
 
     /// Replaces the full dataset.
@@ -65,6 +75,10 @@ public enum BridgeCommand {
 
     /// Switches between `"dark"` and `"light"` themes.
     case setTheme(String)
+
+    /// Changes the display timezone for time-axis and crosshair labels.
+    /// Accepts any IANA string (e.g. `"America/New_York"`), `"UTC"`, or `"local"`.
+    case setTimezone(String)
 
     /// Changes the chart series type (e.g. `"candlestick"`, `"line"`, `"area"`).
     case setSeries(String)
@@ -210,6 +224,11 @@ public enum BridgeCommand {
     /// Resets both price and time axes to their default auto-fit state.
     case resetView
 
+    /// Completely resets the chart to a blank state — clears all bars, the live
+    /// price line, and any in-flight fetch. Call before switching to a new symbol
+    /// so that no previous symbol data bleeds into the new chart.
+    case resetData
+
     /// Shows or hides the loading overlay.
     case setLoading(Bool)
 
@@ -231,13 +250,15 @@ public enum BridgeCommand {
         case let .initialize(theme, symbol, series, timeframe, duration, enableTrading,
                              showVolume, showUI, showDrawingTools, showBidAskLines, showActLogo,
                              showCandleCountdown, candleCountdownTimeframes, disableCountdownOnMobile,
-                             maxSubPanes, mobileBarDivisor, targetCandleWidth, tickClosePriceSource,
+                             maxSubPanes, mobileBarDivisor,
+                             momentumScrollEnabled, momentumDecay, momentumThreshold, momentumMaxVelocity,
+                             targetCandleWidth, tickClosePriceSource,
                              tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle,
                              hideLevelConfirmCancel, levelClusteringEnabled, clusterThresholdDistance,
                              tfcEnabled, showSettings,
                              hideSymbolAndTick, showBottomBar,
                              aggregateFrom, canvasColorsJson, themeOverridesJson, labelsJson,
-                             uiConfigJson, durationTimeframeMap, onSymbolClick):
+                             uiConfigJson, durationTimeframeMap, onSymbolClick, timezone):
             var payload: [String: Any] = ["theme": theme]
             if let symbol { payload["symbol"] = symbol }
             if let series { payload["series"] = series }
@@ -256,6 +277,10 @@ public enum BridgeCommand {
             if let disableCountdownOnMobile { payload["disableCountdownOnMobile"] = disableCountdownOnMobile }
             if let maxSubPanes { payload["maxSubPanes"] = maxSubPanes }
             if let mobileBarDivisor { payload["mobileBarDivisor"] = mobileBarDivisor }
+            if let momentumScrollEnabled { payload["momentumScrollEnabled"] = momentumScrollEnabled }
+            if let momentumDecay { payload["momentumDecay"] = momentumDecay }
+            if let momentumThreshold { payload["momentumThreshold"] = momentumThreshold }
+            if let momentumMaxVelocity { payload["momentumMaxVelocity"] = momentumMaxVelocity }
             if let targetCandleWidth { payload["targetCandleWidth"] = targetCandleWidth }
             if let tickClosePriceSource { payload["tickClosePriceSource"] = tickClosePriceSource }
             if let tradesThresholdForHorizontalLine { payload["tradesThresholdForHorizontalLine"] = tradesThresholdForHorizontalLine }
@@ -271,6 +296,7 @@ public enum BridgeCommand {
             if let aggregateFrom { payload["aggregateFrom"] = aggregateFrom }
             if let durationTimeframeMap { payload["durationTimeframeMap"] = durationTimeframeMap }
             if let onSymbolClick, onSymbolClick { payload["onSymbolClick"] = true }
+            if let timezone { payload["timezone"] = timezone }
             func embedJson(_ key: String, _ json: String?) {
                 guard let json,
                       let data = json.data(using: .utf8),
@@ -296,6 +322,9 @@ public enum BridgeCommand {
 
         case let .setTheme(theme):
             envelope = ["type": "setTheme", "payload": ["theme": theme]]
+
+        case let .setTimezone(tz):
+            envelope = ["type": "setTimezone", "payload": ["timezone": tz]]
 
         case let .setSeries(series):
             envelope = ["type": "setSeries", "payload": ["series": series]]
@@ -427,6 +456,9 @@ public enum BridgeCommand {
 
         case .resetView:
             envelope = ["type": "resetView", "payload": [:]]
+
+        case .resetData:
+            envelope = ["type": "resetData", "payload": [:]]
 
         case let .setLoading(loading):
             envelope = ["type": "setLoading", "payload": ["loading": loading]]

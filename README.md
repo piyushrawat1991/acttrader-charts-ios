@@ -92,6 +92,10 @@ ActtraderChartsView.prewarm()
 | `maxSubPanes` | `Int?` | `nil` | Max simultaneous oscillator sub-panes |
 | `prefetchThreshold` | `Int?` | `nil` | Bars from start of data at which historical fetch triggers (min 20, default 80) |
 | `mobileBarDivisor` | `Int?` | `nil` | Divide desktop bar count on touch (`2`, `3`, or `4`) |
+| `momentumScrollEnabled` | `Bool?` | `nil` | Enable momentum (kinetic) scrolling — chart coasts after a fast flick. Default: `true`. Note: momentum runs in the JS layer, not `UIScrollView` |
+| `momentumDecay` | `Double?` | `nil` | Per-frame velocity decay, normalised to 60 fps. Clamped `[0.80, 0.99]`. Default: `0.95` |
+| `momentumThreshold` | `Double?` | `nil` | Min release velocity (px/ms) to launch momentum. Default: `0.3` |
+| `momentumMaxVelocity` | `Double?` | `nil` | Max launch velocity (px/ms). Default: `6.0` |
 | `targetCandleWidth` | `Double?` | `nil` | Target px width per candle for auto-calculating initial bar count |
 | `tickClosePriceSource` | `String?` | `nil` | `"bid"` or `"ask"` for live tick close/high/low |
 | `tradesThresholdForHorizontalLine` | `Int?` | `nil` | Level count above which render auto-switches to dot mode |
@@ -101,12 +105,37 @@ ActtraderChartsView.prewarm()
 | `levelClusteringEnabled` | `Bool?` | `true` | Enable trade-level fan-out clustering; overlapping levels group into expandable badges |
 | `clusterThresholdDistance` | `Int?` | `20` | Pixel proximity threshold for clustering (only when `levelClusteringEnabled` is `true`) |
 | `hideQtyButton` | `Bool?` | `nil` | Hide the floating Qty input overlay on draft orders |
+| `showQuantityField` | `Bool?` | `nil` (`false`) | Render an editable QTY pill at the left of the draft order info box. Tapping opens a flyout input to edit the quantity before submitting |
+| `quantityFieldMinLots` | `Double?` | `nil` (`1.0`) | Minimum lot size, step size, and initial quantity for the QTY flyout (only used when `showQuantityField = true`) |
+| `quantityFieldMaxLots` | `Double?` | `nil` (`100.0`) | Maximum lot size for the QTY flyout (only used when `showQuantityField = true`) |
 | `tfcEnabled` | `Bool?` | `nil` (`true`) | Enable the TFC toggle button in the top bar. When `false`, TFC is completely disabled — the toggle button is hidden and all trade levels, draft orders, and the floating trade button are suppressed |
 | `showSettings` | `Bool?` | `nil` | Show the settings gear button in the top bar; set to `false` to hide it entirely |
 | `hideSymbolAndTick` | `Bool?` | `nil` | Hide the symbol name, OHLC strip, and tick-activity dot overlay |
 | `showBottomBar` | `Bool?` | `nil` | Show the bottom duration-selector bar (hidden by default) |
+| `timezone` | `String?` | `nil` (`"UTC"`) | IANA timezone string for time-axis and crosshair labels. `"UTC"` (default), `"local"` (device timezone), or any IANA string (`"America/New_York"`, `"Europe/London"`, etc.) |
 | `uiConfigJson` | `String?` | `nil` | Per-component UI configuration overrides (font sizes, icon sizes, spacing) as a raw JSON string. See *Mobile icon sizing* below. |
 | `themeOverrides` | `ThemeOverrides?` | `nil` | Typed per-theme color overrides. See *Theme overrides* below. |
+| `initialState` | `String?` | `nil` | Raw JSON from a prior `onStateSnapshot` to restore atomically at init (timeframe, series, indicators, drawings). See *Restoring state without a flash* below. |
+
+### Restoring state without a flash
+
+When you need to restore a previously saved chart state (e.g. user re-opens the chart screen), pass the snapshot JSON as `initialState` instead of calling `setState()` inside `onReady`:
+
+```swift
+// ✅ Correct — init + setState are queued together and flushed atomically;
+//    the engine never renders a frame with the default "1D" timeframe.
+let chart = ActtraderChartsView(
+    theme: "dark",
+    symbol: "EURUSD",
+    initialState: savedStateJson
+)
+
+// ❌ Avoid — setState fires after the chart has already rendered once with "1D".
+let chart = ActtraderChartsView(theme: "dark", symbol: "EURUSD")
+chart.onReady = { chart.setState(savedStateJson) }
+```
+
+For simple cases where you only need to set a specific timeframe (without full state restore), use the `timeframe` constructor parameter directly — no `initialState` required.
 
 ### Theme overrides
 
@@ -215,9 +244,24 @@ chart.initialize(
 | `setIsins(_:)` | Update the symbol list used by the ISIN picker |
 | `setMinLots(_:)` | Update the minimum lot size in the trade popover |
 | `resetView()` | Reset price and time axes to auto-fit |
+| `resetData()` | Clear all bars, the live price line, and any in-flight fetch. Call before switching to a new symbol to prevent previous symbol data from bleeding in (see example below) |
 | `setLoading(_:)` | Show or hide the loading overlay |
+| `setTimezone(_:)` | Change display timezone at runtime — IANA string (`"America/New_York"`) or `"local"` |
 | `setThemeOverrides(_:)` | Update per-theme color overrides at runtime — accepts typed `ThemeOverrides` or raw JSON string |
 | `correctBar(barTime:bar:)` | Replace a specific bar with authoritative OHLCV data (e.g. server correction) |
+
+#### Symbol switch pattern
+
+Always call `resetData()` before loading bars for a new symbol. This prevents
+the previous symbol's candles and live price line from bleeding into the new chart
+during the data-fetch window.
+
+```swift
+chart.setSymbol("GBPUSD")
+chart.resetData()
+// … fetch new bars for GBPUSD …
+chart.loadData(bars)
+```
 
 ### Events (callbacks)
 

@@ -43,6 +43,7 @@ public class ActtraderChartsView: UIView {
 
     private var pendingCommands: [String] = []
     private var isReady = false
+    private var hasCalledOnReady = false
     private let queueLock = NSLock()
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -66,6 +67,10 @@ public class ActtraderChartsView: UIView {
     ///   - disableCountdownOnMobile: Suppress the countdown specifically on mobile.
     ///   - maxSubPanes: Maximum number of indicator sub-panes (oscillators). Defaults to 3 when `nil`.
     ///   - mobileBarDivisor: Bar density divisor for mobile (2, 3, or 4). Defaults to 2 when `nil`.
+    ///   - momentumScrollEnabled: Enable momentum (kinetic) scrolling on drag release. Defaults to `true` when `nil`.
+    ///   - momentumDecay: Per-frame velocity decay factor, normalised to 60 fps. Clamped to [0.80, 0.99]. Defaults to `0.95` when `nil`.
+    ///   - momentumThreshold: Minimum release velocity (px/ms) to trigger momentum. Defaults to `0.3` when `nil`.
+    ///   - momentumMaxVelocity: Maximum launch velocity (px/ms) for momentum. Defaults to `6.0` when `nil`.
     ///   - targetCandleWidth: Target candle width in pixels. Defaults to 10 when `nil`.
     ///   - tickClosePriceSource: Price source for tick close (`"bid"` or `"ask"`). Defaults to `"bid"` when `nil`.
     ///   - tradesThresholdForHorizontalLine: Min trade count to render a horizontal level line.
@@ -82,6 +87,10 @@ public class ActtraderChartsView: UIView {
     ///   - uiConfigJson: JSON string of per-component UI configuration overrides (font sizes, spacing).
     ///   - durationTimeframeMap: Override the default duration → timeframe pairings for the bottom bar.
     ///   - onSymbolClick: When `true`, fires a `symbolClick` event on symbol tap instead of opening the picker modal.
+    ///   - initialState: Raw JSON string from a prior `onStateSnapshot` callback. When provided, the full
+    ///     chart state (timeframe, series, indicators, drawings, etc.) is restored atomically alongside the
+    ///     `init` command — both are queued before the WebView fires `ready` and flushed in a single
+    ///     `evaluateJavaScript` call, so there is no intermediate "1D" flash.
     public init(
         theme: String = "dark",
         symbol: String? = nil,
@@ -99,6 +108,10 @@ public class ActtraderChartsView: UIView {
         disableCountdownOnMobile: Bool? = nil,
         maxSubPanes: Int? = nil,
         mobileBarDivisor: Int? = nil,
+        momentumScrollEnabled: Bool? = nil,
+        momentumDecay: Double? = nil,
+        momentumThreshold: Double? = nil,
+        momentumMaxVelocity: Double? = nil,
         targetCandleWidth: Double? = nil,
         tickClosePriceSource: String? = nil,
         tradesThresholdForHorizontalLine: Int? = nil,
@@ -118,7 +131,10 @@ public class ActtraderChartsView: UIView {
         labelsJson: String? = nil,
         uiConfigJson: String? = nil,
         durationTimeframeMap: [String: String]? = nil,
-        onSymbolClick: Bool? = nil
+        onSymbolClick: Bool? = nil,
+        /// IANA timezone string for time-axis and crosshair labels. Default: `"UTC"`.
+        timezone: String? = nil,
+        initialState: String? = nil
     ) {
         // Build WKWebView configuration
         let config = WKWebViewConfiguration()
@@ -184,6 +200,10 @@ public class ActtraderChartsView: UIView {
             disableCountdownOnMobile: disableCountdownOnMobile,
             maxSubPanes: maxSubPanes,
             mobileBarDivisor: mobileBarDivisor,
+            momentumScrollEnabled: momentumScrollEnabled,
+            momentumDecay: momentumDecay,
+            momentumThreshold: momentumThreshold,
+            momentumMaxVelocity: momentumMaxVelocity,
             targetCandleWidth: targetCandleWidth,
             tickClosePriceSource: tickClosePriceSource,
             tradesThresholdForHorizontalLine: tradesThresholdForHorizontalLine,
@@ -202,8 +222,15 @@ public class ActtraderChartsView: UIView {
             labelsJson: labelsJson,
             uiConfigJson: uiConfigJson,
             durationTimeframeMap: durationTimeframeMap,
-            onSymbolClick: onSymbolClick
+            onSymbolClick: onSymbolClick,
+            timezone: timezone
         ))
+
+        // Queue state restoration alongside the init command so both are evaluated
+        // in a single evaluateJavaScript call when the WebView fires `ready`.
+        // This prevents the engine from briefly rendering with its "1D" default
+        // before the saved timeframe, series, and indicators are applied.
+        if let initialState { sendCommand(.setState(initialState)) }
     }
 
     @available(*, unavailable)
@@ -317,6 +344,12 @@ public class ActtraderChartsView: UIView {
         webView.scrollView.backgroundColor = webView.backgroundColor
         webView.overrideUserInterfaceStyle = theme == "light" ? .light : .dark
         sendCommand(.setTheme(theme))
+    }
+
+    /// Changes the display timezone for time-axis and crosshair labels.
+    /// Accepts any IANA string (e.g. `"America/New_York"`), `"UTC"`, or `"local"`.
+    public func setTimezone(_ timezone: String) {
+        sendCommand(.setTimezone(timezone))
     }
 
     /// Changes the chart series type.
@@ -537,6 +570,22 @@ public class ActtraderChartsView: UIView {
         sendCommand(.resetView)
     }
 
+    /// Completely resets the chart to a blank state.
+    ///
+    /// Cancels any in-flight data fetch, clears all bars, and discards the live
+    /// bid/ask price line. Call this before switching to a new symbol so that no
+    /// previous symbol data bleeds into the new chart, then follow with `loadData(_:)`.
+    ///
+    /// ```swift
+    /// chart.setSymbol("GBPUSD")
+    /// chart.resetData()
+    /// // … fetch new bars …
+    /// chart.loadData(newBars)
+    /// ```
+    public func resetData() {
+        sendCommand(.resetData)
+    }
+
     /// Shows or hides the loading overlay.
     public func setLoading(_ loading: Bool) {
         sendCommand(.setLoading(loading))
@@ -649,7 +698,10 @@ public class ActtraderChartsView: UIView {
             UIView.animate(withDuration: 0.2) { self.skeletonView.alpha = 0 } completion: { _ in
                 self.skeletonView.isHidden = true
             }
-            onReady?()
+            if !hasCalledOnReady {
+                hasCalledOnReady = true
+                onReady?()
+            }
         case .crosshair:    onCrosshair?(event)
         case .barClick:     onBarClick?(event)
         case .viewportChange: onViewportChange?(event)

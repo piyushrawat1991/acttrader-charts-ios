@@ -224,6 +224,11 @@ public enum BridgeCommand {
     /// Resets both price and time axes to their default auto-fit state.
     case resetView
 
+    /// Completely resets the chart to a blank state — clears all bars, the live
+    /// price line, and any in-flight fetch. Call before switching to a new symbol
+    /// so that no previous symbol data bleeds into the new chart.
+    case resetData
+
     /// Shows or hides the loading overlay.
     case setLoading(Bool)
 
@@ -451,6 +456,9 @@ public enum BridgeCommand {
 
         case .resetView:
             envelope = ["type": "resetView", "payload": [:]]
+
+        case .resetData:
+            envelope = ["type": "resetData", "payload": [:]]
 
         case let .setLoading(loading):
             envelope = ["type": "setLoading", "payload": ["loading": loading]]

@@ -570,6 +570,22 @@ public class ActtraderChartsView: UIView {
         sendCommand(.resetView)
     }
 
+    /// Completely resets the chart to a blank state.
+    ///
+    /// Cancels any in-flight data fetch, clears all bars, and discards the live
+    /// bid/ask price line. Call this before switching to a new symbol so that no
+    /// previous symbol data bleeds into the new chart, then follow with `loadData(_:)`.
+    ///
+    /// ```swift
+    /// chart.setSymbol("GBPUSD")
+    /// chart.resetData()
+    /// // … fetch new bars …
+    /// chart.loadData(newBars)
+    /// ```
+    public func resetData() {
+        sendCommand(.resetData)
+    }
+
     /// Shows or hides the loading overlay.
     public func setLoading(_ loading: Bool) {
         sendCommand(.setLoading(loading))

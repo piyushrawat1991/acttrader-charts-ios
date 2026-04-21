@@ -5,8 +5,11 @@ public struct TradeLevelChange {
     /// Which field changed: `"MAIN"`, `"SL"`, `"TP"`, `"ADD_SL"`, `"ADD_TP"`, `"REMOVE_SL"`, `"REMOVE_TP"`.
     public let field: String
     public let newPrice: Double
-    /// Opaque level data serialised as a raw JSON string.
+    /// Opaque level data serialised as a raw JSON string. On the `MAIN` change, the embedded
+    /// `lots` field is overridden with the newly-edited qty when the user changed it this session.
     public let data: String
+    /// Present on the `MAIN` change when the user edited the lot size this session.
+    public let newLots: Double?
     public let bracketOrderLabel: String?
 }
 
@@ -59,7 +62,9 @@ public enum BridgeEvent {
     case tradeLevelDrag(label: String, newPrice: Double, data: String, bracketType: String?, isFullscreen: Bool)
 
     /// User confirmed edits to a trade level (main price, SL, TP, or bracket changes batched together).
-    case tradeLevelEdit(label: String, type: String, data: String, isFullscreen: Bool, changes: [TradeLevelChange])
+    /// `data` has its embedded `lots` field overridden with the new qty when the user edited it.
+    /// `newLots` is present when the user changed the lot size via the QTY pill flyout during this edit session.
+    case tradeLevelEdit(label: String, type: String, data: String, isFullscreen: Bool, newLots: Double?, changes: [TradeLevelChange])
 
     /// Chart ✓ button confirmed an edit (including draft orders).
     case tradeLevelConfirmed(label: String, type: String, isFullscreen: Bool)
@@ -232,6 +237,7 @@ public enum BridgeEvent {
                     field:             c["field"]             as? String ?? "",
                     newPrice:          c["newPrice"]          as? Double ?? 0,
                     data:              cData,
+                    newLots:           c["newLots"]           as? Double,
                     bracketOrderLabel: c["bracketOrderLabel"] as? String
                 )
             }
@@ -240,6 +246,7 @@ public enum BridgeEvent {
                 type:         p["type"]         as? String ?? "",
                 data:         tleData,
                 isFullscreen: p["isFullscreen"] as? Bool ?? false,
+                newLots:      p["newLots"]      as? Double,
                 changes:      changes
             )
 

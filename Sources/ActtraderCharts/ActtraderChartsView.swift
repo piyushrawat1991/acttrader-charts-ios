@@ -108,6 +108,13 @@ public class ActtraderChartsView: UIView {
         disableCountdownOnMobile: Bool? = nil,
         maxSubPanes: Int? = nil,
         mobileBarDivisor: Int? = nil,
+        /// Minimum bars expected from the initial fetch before giving up. If fewer bars
+        /// are returned by `onDataRequest`, the chart engine auto-widens the lookback
+        /// window and retries — useful for weekends and sparse symbols. Default: `10`.
+        minInitialBars: Int? = nil,
+        /// Hard ceiling (in milliseconds) on fetch-window lookback for auto-widening
+        /// retries. Default: 365 days.
+        maxLookbackMs: Int64? = nil,
         momentumScrollEnabled: Bool? = nil,
         momentumDecay: Double? = nil,
         momentumThreshold: Double? = nil,
@@ -201,6 +208,8 @@ public class ActtraderChartsView: UIView {
             disableCountdownOnMobile: disableCountdownOnMobile,
             maxSubPanes: maxSubPanes,
             mobileBarDivisor: mobileBarDivisor,
+            minInitialBars: minInitialBars,
+            maxLookbackMs: maxLookbackMs,
             momentumScrollEnabled: momentumScrollEnabled,
             momentumDecay: momentumDecay,
             momentumThreshold: momentumThreshold,

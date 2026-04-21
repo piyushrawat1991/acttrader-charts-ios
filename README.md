@@ -92,6 +92,8 @@ ActtraderChartsView.prewarm()
 | `maxSubPanes` | `Int?` | `nil` | Max simultaneous oscillator sub-panes |
 | `prefetchThreshold` | `Int?` | `nil` | Bars from start of data at which historical fetch triggers (min 20, default 80) |
 | `mobileBarDivisor` | `Int?` | `nil` | Divide desktop bar count on touch (`2`, `3`, or `4`) |
+| `minInitialBars` | `Int?` | `nil` | If `onDataRequest` returns fewer bars, the fetch window auto-widens and retries. Default: `10` |
+| `maxLookbackMs` | `Int64?` | `nil` | Hard ceiling (ms) for auto-widening retries. Default: 365 days |
 | `momentumScrollEnabled` | `Bool?` | `nil` | Enable momentum (kinetic) scrolling — chart coasts after a fast flick. Default: `true`. Note: momentum runs in the JS layer, not `UIScrollView` |
 | `momentumDecay` | `Double?` | `nil` | Per-frame velocity decay, normalised to 60 fps. Clamped `[0.80, 0.99]`. Default: `0.95` |
 | `momentumThreshold` | `Double?` | `nil` | Min release velocity (px/ms) to launch momentum. Default: `0.3` |
@@ -230,6 +232,7 @@ chart.initialize(
 | `cancelLevelEdit(_:)` | Cancel an in-progress level edit, reverting to last confirmed price |
 | `selectLevel(_:)` | Programmatically highlight a level; pass `nil` to deselect all |
 | | **Off-viewport indicators:** When a level's entry/SL/TP is outside the visible price range, a `▲ N` / `▼ N` pill appears near the chart's right edge. Tapping the pill smooth-scrolls the nearest off-screen marker to center. This is automatic — no configuration needed. |
+| | **Trade level visuals:** Pending orders and ES/EL entry working orders render as **dashed** lines tinted by side (`pendingBuyLine` green / `pendingSellLine` red). True open positions render as **solid** lines — green/red when `pnl` is set, otherwise `positionLine` (purple/indigo). Each true open position shows a colored entry-price tag on the right-side price axis (same style as the Bid/Ask tag). |
 | **TFC — Draft Orders** | |
 | `showDraftOrder(price:side:orderType:)` | Show a draggable limit or stop draft order line |
 | `showMarketDraft(price:side:)` | Show a non-draggable market-order preview line |

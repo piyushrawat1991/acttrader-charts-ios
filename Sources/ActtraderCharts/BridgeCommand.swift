@@ -33,6 +33,14 @@ public enum BridgeCommand {
         disableCountdownOnMobile: Bool?,
         maxSubPanes: Int?,
         mobileBarDivisor: Int?,
+        /// Minimum bars expected from the initial fetch before giving up. If fewer bars
+        /// are returned by `onDataRequest`, the chart engine auto-widens the lookback
+        /// window and retries — handles weekends, market closures, and sparse symbols.
+        /// Default: `10`.
+        minInitialBars: Int?,
+        /// Hard ceiling (in milliseconds) on fetch-window lookback for auto-widening
+        /// retries. Default: 365 days.
+        maxLookbackMs: Int64?,
         /// Enable momentum (kinetic) scrolling on drag release. Default: `true`.
         momentumScrollEnabled: Bool?,
         /// Per-frame velocity decay factor, normalised to 60 fps. Clamped [0.80, 0.99]. Default: `0.95`.
@@ -253,6 +261,7 @@ public enum BridgeCommand {
                              showVolume, showUI, showDrawingTools, showBidAskLines, showActLogo,
                              showCandleCountdown, candleCountdownTimeframes, disableCountdownOnMobile,
                              maxSubPanes, mobileBarDivisor,
+                             minInitialBars, maxLookbackMs,
                              momentumScrollEnabled, momentumDecay, momentumThreshold, momentumMaxVelocity,
                              targetCandleWidth, tickClosePriceSource,
                              tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle,
@@ -279,6 +288,8 @@ public enum BridgeCommand {
             if let disableCountdownOnMobile { payload["disableCountdownOnMobile"] = disableCountdownOnMobile }
             if let maxSubPanes { payload["maxSubPanes"] = maxSubPanes }
             if let mobileBarDivisor { payload["mobileBarDivisor"] = mobileBarDivisor }
+            if let minInitialBars { payload["minInitialBars"] = minInitialBars }
+            if let maxLookbackMs { payload["maxLookbackMs"] = maxLookbackMs }
             if let momentumScrollEnabled { payload["momentumScrollEnabled"] = momentumScrollEnabled }
             if let momentumDecay { payload["momentumDecay"] = momentumDecay }
             if let momentumThreshold { payload["momentumThreshold"] = momentumThreshold }

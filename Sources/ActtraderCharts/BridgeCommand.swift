@@ -52,6 +52,8 @@ public enum BridgeCommand {
         /// Enable TFC toggle button in the top bar. When `false`, TFC is completely disabled. Default: `true`.
         tfcEnabled: Bool?,
         showSettings: Bool?,
+        /// Show the fullscreen toggle button in the top bar. Default: `false` on mobile (hidden).
+        showFullscreenButton: Bool,
         hideSymbolAndTick: Bool?,
         showBottomBar: Bool?,
         aggregateFrom: [String: String]?,
@@ -255,7 +257,7 @@ public enum BridgeCommand {
                              targetCandleWidth, tickClosePriceSource,
                              tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle,
                              hideLevelConfirmCancel, levelClusteringEnabled, clusterThresholdDistance,
-                             tfcEnabled, showSettings,
+                             tfcEnabled, showSettings, showFullscreenButton,
                              hideSymbolAndTick, showBottomBar,
                              aggregateFrom, canvasColorsJson, themeOverridesJson, labelsJson,
                              uiConfigJson, durationTimeframeMap, onSymbolClick, timezone):
@@ -291,6 +293,7 @@ public enum BridgeCommand {
             if let clusterThresholdDistance { payload["clusterThresholdDistance"] = clusterThresholdDistance }
             if let tfcEnabled { payload["tfcEnabled"] = tfcEnabled }
             if let showSettings { payload["showSettings"] = showSettings }
+            payload["showFullscreenButton"] = showFullscreenButton
             if let hideSymbolAndTick { payload["hideSymbolAndTick"] = hideSymbolAndTick }
             if let showBottomBar { payload["showBottomBar"] = showBottomBar }
             if let aggregateFrom { payload["aggregateFrom"] = aggregateFrom }

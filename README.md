@@ -281,7 +281,7 @@ chart.loadData(bars)
 | `onNewBar` | New bar appended at live edge |
 | `onStreamStatus` | Stream connection status changed |
 | `onPlaceOrder` | User submitted an order (requires `enableTrading`) |
-| `onTradeLevelEdit` | User confirmed a TFC level drag or bracket edit — payload includes `label`, `type`, `data`, `changes[]`, `isFullscreen` |
+| `onTradeLevelEdit` | User confirmed a TFC level drag or bracket edit — payload includes `label`, `type`, `data`, `newLots?`, `changes[]` (each with `newLots?` on the `MAIN` change), `isFullscreen`. When qty was edited this session, the `lots` field embedded in `data` (and in the `MAIN` change's `data`) is overridden with the new value for convenience. |
 | `onTradeLevelClose` | User tapped × on a level — payload includes `label`, `type`, `action`, `data`, `isFullscreen` |
 | `onTradeLevelDrag` | Live price during drag, fires on every move — payload includes `label`, `newPrice`, `bracketType?`, `data`, `isFullscreen` |
 | `onTradeLevelEditOpen` | User tapped the pencil button **or** (when `hideLevelConfirmCancel: true`) tapped a trade level line — payload includes `label`, `type`, `price`, `side?`, `stopLossPrice?`, `takeProfitPrice?`, `data`, `isFullscreen` |

@@ -55,6 +55,10 @@ public enum BridgeCommand {
         tradeDisplayFilter: String?,
         positionRenderStyle: String?,
         hideLevelConfirmCancel: Bool?,
+        /// Multiplier for trade-level Confirm/Cancel/Edit/Close button radii and gaps.
+        /// Scales visuals AND hit/drag areas together — useful for touch targets.
+        /// Clamped to `[1.0, 3.0]`. Default: `1.0`.
+        tradeLevelButtonScale: Double?,
         levelClusteringEnabled: Bool?,
         clusterThresholdDistance: Int?,
         /// Enable TFC toggle button in the top bar. When `false`, TFC is completely disabled. Default: `true`.
@@ -250,6 +254,13 @@ public enum BridgeCommand {
     /// - Parameter barTime: Unix millisecond timestamp of the bar to replace.
     case correctBar(barTime: Int64, bar: OHLCVBar)
 
+    /// Dismisses any open flyouts, modals, dropdowns, or popovers in the chart UI.
+    ///
+    /// Prefer calling ``ActtraderChartsView/dismissAllUI()``, which short-circuits
+    /// the WebView round-trip when nothing is open and returns a boolean so you
+    /// can decide whether to consume a back action.
+    case dismissAllUI
+
     // ── Serialisation ─────────────────────────────────────────────────────────
 
     /// The JSON string to pass to `window.ChartBridge.send(...)`.
@@ -265,7 +276,8 @@ public enum BridgeCommand {
                              momentumScrollEnabled, momentumDecay, momentumThreshold, momentumMaxVelocity,
                              targetCandleWidth, tickClosePriceSource,
                              tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle,
-                             hideLevelConfirmCancel, levelClusteringEnabled, clusterThresholdDistance,
+                             hideLevelConfirmCancel, tradeLevelButtonScale,
+                             levelClusteringEnabled, clusterThresholdDistance,
                              tfcEnabled, showSettings, showFullscreenButton,
                              hideSymbolAndTick, showBottomBar,
                              aggregateFrom, canvasColorsJson, themeOverridesJson, labelsJson,
@@ -300,6 +312,7 @@ public enum BridgeCommand {
             if let tradeDisplayFilter { payload["tradeDisplayFilter"] = tradeDisplayFilter }
             if let positionRenderStyle { payload["positionRenderStyle"] = positionRenderStyle }
             if let hideLevelConfirmCancel { payload["hideLevelConfirmCancel"] = hideLevelConfirmCancel }
+            if let tradeLevelButtonScale { payload["tradeLevelButtonScale"] = tradeLevelButtonScale }
             if let levelClusteringEnabled { payload["levelClusteringEnabled"] = levelClusteringEnabled }
             if let clusterThresholdDistance { payload["clusterThresholdDistance"] = clusterThresholdDistance }
             if let tfcEnabled { payload["tfcEnabled"] = tfcEnabled }
@@ -491,6 +504,9 @@ public enum BridgeCommand {
                 "close": bar.close, "volume": bar.volume, "time": bar.time,
             ]
             envelope = ["type": "correctBar", "payload": ["barTime": barTime, "bar": barObj]]
+
+        case .dismissAllUI:
+            envelope = ["type": "dismissAllUI", "payload": [:]]
         }
 
         guard

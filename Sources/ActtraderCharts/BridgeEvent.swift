@@ -89,6 +89,14 @@ public enum BridgeEvent {
     /// TFC (Trade from Charts) was toggled on or off via the top bar button or API.
     case tfcToggle(enabled: Bool)
 
+    /// Emitted whenever any dismissible chart UI (flyout, modal, dropdown, popover) opens or closes.
+    /// Paired with ``BridgeCommand/dismissAllUI``, this lets the host decide whether the system
+    /// back action should dismiss chart UI or propagate to normal navigation.
+    ///
+    /// ``ActtraderChartsView`` already listens for this event internally and mirrors the state into
+    /// ``ActtraderChartsView/hasOpenUI``, so most hosts won't need to subscribe directly.
+    case uiStateChange(hasOpenUI: Bool)
+
     /// User tapped the symbol name; fires when `onSymbolClick` is enabled in the init command.
     case symbolClick(symbol: String)
 
@@ -306,6 +314,9 @@ public enum BridgeEvent {
 
         case "tfcToggle":
             return .tfcToggle(enabled: p["enabled"] as? Bool ?? false)
+
+        case "uiStateChange":
+            return .uiStateChange(hasOpenUI: p["hasOpenUI"] as? Bool ?? false)
 
         case "symbolClick":
             return .symbolClick(symbol: p["symbol"] as? String ?? "")

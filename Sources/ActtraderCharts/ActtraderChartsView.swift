@@ -77,6 +77,7 @@ public class ActtraderChartsView: UIView {
     ///   - tradeDisplayFilter: Filter for which trade levels to display.
     ///   - positionRenderStyle: Render style for open positions.
     ///   - hideLevelConfirmCancel: Hide on-canvas confirm/cancel buttons on TFC level edits. Defaults to `false` when `nil`.
+    ///   - tradeLevelButtonScale: Multiplier for trade-level Confirm/Cancel/Edit/Close button radii and gaps. Scales visuals AND hit/drag areas together — useful for larger touch targets. Clamped to `[1.0, 3.0]`. Defaults to `1.0` when `nil`.
     ///   - showSettings: Show the settings gear button in the top bar. Set to `false` to hide it entirely. Defaults to `true` when `nil`.
     ///   - hideSymbolAndTick: Hide the symbol name, OHLC strip, and tick-activity dot overlay. Defaults to `false` when `nil`.
     ///   - showBottomBar: Show the bottom duration-selector bar. Defaults to `false` when `nil`.
@@ -125,6 +126,7 @@ public class ActtraderChartsView: UIView {
         tradeDisplayFilter: String? = nil,
         positionRenderStyle: String? = nil,
         hideLevelConfirmCancel: Bool? = nil,
+        tradeLevelButtonScale: Double? = nil,
         levelClusteringEnabled: Bool? = nil,
         clusterThresholdDistance: Int? = nil,
         tfcEnabled: Bool? = nil,
@@ -220,6 +222,7 @@ public class ActtraderChartsView: UIView {
             tradeDisplayFilter: tradeDisplayFilter,
             positionRenderStyle: positionRenderStyle,
             hideLevelConfirmCancel: hideLevelConfirmCancel,
+            tradeLevelButtonScale: tradeLevelButtonScale,
             levelClusteringEnabled: levelClusteringEnabled,
             clusterThresholdDistance: clusterThresholdDistance,
             tfcEnabled: tfcEnabled,
@@ -323,6 +326,11 @@ public class ActtraderChartsView: UIView {
 
     /// Called when TFC (Trade from Charts) is toggled on or off via the top bar button or API.
     public var onTfcToggle: ((BridgeEvent) -> Void)?
+
+    /// Called whenever a chart flyout/modal/dropdown opens or closes.
+    /// Most hosts won't need this — ``hasOpenUI`` is maintained automatically and
+    /// ``dismissAllUI()`` is the usual integration point.
+    public var onUiStateChange: ((BridgeEvent) -> Void)?
 
     /// Called when the chart engine requests data for a time range.
     ///
@@ -581,6 +589,36 @@ public class ActtraderChartsView: UIView {
         sendCommand(.resetView)
     }
 
+    // ── UI dismissal ──────────────────────────────────────────────────────────
+
+    /// `true` when any chart flyout/modal/dropdown/popover is currently open.
+    /// Mirrored automatically from `uiStateChange` events emitted by the WebView.
+    public private(set) var hasOpenUI: Bool = false
+
+    /// Dismisses any open chart UI (flyouts, modals, dropdowns, popovers) and returns
+    /// whether anything was dismissed.
+    ///
+    /// iOS has no hardware back button, but this is the integration point for
+    /// custom nav-bar back buttons, interactive pop-gesture handlers, or any other
+    /// host-level dismiss action. Consume the user's back action only when this
+    /// returns `true`; otherwise let the normal navigation proceed.
+    ///
+    /// ```swift
+    /// @objc func backTapped() {
+    ///     if !chart.dismissAllUI() {
+    ///         navigationController?.popViewController(animated: true)
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// - Returns: `true` if a flyout/modal was dismissed; `false` if nothing was open.
+    @discardableResult
+    public func dismissAllUI() -> Bool {
+        guard hasOpenUI else { return false }
+        sendCommand(.dismissAllUI)
+        return true
+    }
+
     /// Completely resets the chart to a blank state.
     ///
     /// Cancels any in-flight data fetch, clears all bars, and discards the live
@@ -734,6 +772,9 @@ public class ActtraderChartsView: UIView {
         case .draftInitiated:              onDraftInitiated?(event)
         case .draftCancelled:      onDraftCancelled?(event)
         case .tfcToggle:           onTfcToggle?(event)
+        case let .uiStateChange(hasOpenUI):
+            self.hasOpenUI = hasOpenUI
+            onUiStateChange?(event)
         case .dataRequest:         onDataRequest?(event)
         case .symbolClick:         onSymbolClick?(event)
         case .error:               onError?(event)

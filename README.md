@@ -122,6 +122,7 @@ ActtraderChartsView.prewarm()
 | `tradeDisplayFilter` | `String?` | `nil` | Which TFC levels are visible: `"all"` · `"positions"` · `"orders"` · `"none"` |
 | `positionRenderStyle` | `String?` | `nil` | Force position render style: `"line"` or `"dot"` |
 | `hideLevelConfirmCancel` | `Bool?` | `nil` | Hide on-canvas ✓/✗ confirm/cancel buttons for TFC level edits |
+| `tradeLevelButtonScale` | `Double?` | `nil` (`1.0`) | Multiplier for trade-level Confirm/Cancel/Edit/Close button radii and gaps. Scales visuals **and** hit/drag areas together — raise it on touch devices for easier tapping. Clamped to `[1.0, 3.0]` |
 | `levelClusteringEnabled` | `Bool?` | `true` | Enable trade-level fan-out clustering; overlapping levels group into expandable badges |
 | `clusterThresholdDistance` | `Int?` | `20` | Pixel proximity threshold for clustering (only when `levelClusteringEnabled` is `true`) |
 | `hideQtyButton` | `Bool?` | `nil` | Hide the floating Qty input overlay on draft orders |
@@ -251,6 +252,7 @@ chart.initialize(
 | `selectLevel(_:)` | Programmatically highlight a level; pass `nil` to deselect all |
 | | **Off-viewport indicators:** When a level's entry/SL/TP is outside the visible price range, a `▲ N` / `▼ N` pill appears near the chart's right edge. Tapping the pill smooth-scrolls the nearest off-screen marker to center. This is automatic — no configuration needed. |
 | | **Trade level visuals:** Pending orders and ES/EL entry working orders render as **dashed** lines tinted by side (`pendingBuyLine` green / `pendingSellLine` red). True open positions render as **solid** lines — green/red when `pnl` is set, otherwise `positionLine` (purple/indigo). Each true open position shows a colored entry-price tag on the right-side price axis (same style as the Bid/Ask tag). |
+| | **Brackets follow entry on drag:** dragging the entry line of a pending order, draft order, or an entry-editable open position translates any existing SL/TP brackets by the same price delta. The distance is whatever the user currently sees; if they manually adjust SL or TP, the new distance anchors subsequent entry drags. Missing brackets are not auto-created. On confirm, `onTradeLevelEdit` carries all translated fields together in one `changes` array; with `hideLevelConfirmCancel = true` the three changes arrive as a single atomic event. |
 | **TFC — Draft Orders** | |
 | `showDraftOrder(price:side:orderType:)` | Show a draggable limit or stop draft order line |
 | `showMarketDraft(price:side:)` | Show a non-draggable market-order preview line |
@@ -311,12 +313,47 @@ chart.loadData(bars)
 | `onDraftInitiated` | New draft order shown — payload includes `side`, `price`, `orderType`, `isFullscreen` |
 | `onDraftCancelled` | Draft order cancelled — payload includes `label`, `isFullscreen` |
 | `onTfcToggle` | TFC toggled on or off — payload includes `enabled: Bool` |
+| `onUiStateChange` | Any chart flyout/modal/dropdown opened or closed — payload includes `hasOpenUI: Bool`. Most hosts don't need this directly; `ActtraderChartsView.hasOpenUI` mirrors the state automatically and `dismissAllUI()` is the usual integration point. |
 | `onDataRequest` | Chart requests data for a time range — payload includes `requestId`, `from`, `to`, `timeframe`; call `resolveDataRequest` to respond |
 | `onSymbolClick` | User tapped the symbol name (requires `onSymbolClick: true` in `init`) |
 | `onError` | Engine error |
 | `onBridgeEvent` | Generic fallback — every event including those with typed callbacks |
 
 > **`isFullscreen`** is `true` when the chart is in fullscreen mode at the time of the TFC action. Use it to gate toast notifications so they only appear while the chart is covering the full screen.
+
+## Handling back / dismiss actions
+
+When a flyout, modal, or dropdown is open inside the chart and the user performs a back action (swipe-back gesture, custom back button, or dismiss button in your UI), call `dismissAllUI()` first. It returns `true` if something was dismissed — consume the event in that case and skip your normal back navigation.
+
+```swift
+// Custom back button wired to a UIBarButtonItem or UIButton
+@objc func backTapped() {
+    if !chart.dismissAllUI() {
+        navigationController?.popViewController(animated: true)
+    }
+}
+```
+
+For swipe-back gesture interception, implement `UIGestureRecognizerDelegate` and intercept the interactive pop:
+
+```swift
+// In viewDidLoad — replace the interactive pop target with your own handler
+override func viewDidLoad() {
+    super.viewDidLoad()
+    navigationController?.interactivePopGestureRecognizer?.addTarget(
+        self, action: #selector(handleSwipeBack(_:))
+    )
+    navigationController?.interactivePopGestureRecognizer?.delegate = self
+}
+
+@objc func handleSwipeBack(_ gesture: UIScreenEdgePanGestureRecognizer) {
+    if gesture.state == .began, chart.dismissAllUI() {
+        gesture.state = .cancelled   // absorb the gesture; flyout is now closed
+    }
+}
+```
+
+`ActtraderChartsView.hasOpenUI` is updated synchronously from the `uiStateChange` bridge event, so checking it before calling `dismissAllUI()` is safe inside any synchronous gesture or button handler.
 
 ## Mobile mode — `hideLevelConfirmCancel`
 

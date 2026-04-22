@@ -1,4 +1,8 @@
-name: Sync chart.html
+name: Sync version + tag
+
+# chart.html is gitignored on main and force-added only on the tag commit.
+# CocoaPods and SPM consumers resolve by git tag, so they still see chart.html
+# at the tagged ref; main stays clean to avoid merge conflicts on feature branches.
 
 on:
   repository_dispatch:
@@ -12,32 +16,30 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Download chart.html
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump podspec version on main
+        run: |
+          sed -i "s/s\.version\s*=\s*'[^']*'/s.version          = '${{ github.event.client_payload.version }}'/" ActtraderCharts.podspec
+          git add ActtraderCharts.podspec
+          git diff --cached --quiet && echo "Nothing to commit, skipping." && exit 0
+          git commit -m "chore: bump version to v${{ github.event.client_payload.version }}"
+          git push origin HEAD:main
+
+      - name: Build release commit with bundled chart.html
         env:
           GH_TOKEN: ${{ secrets.CHARTS_REPO_PAT }}
         run: |
+          mkdir -p Sources/ActtraderCharts/Resources
           gh release download "v${{ github.event.client_payload.version }}" \
             --repo piyushrawat1991/acttrader-charts \
             --pattern "chart.html" \
             --output Sources/ActtraderCharts/Resources/chart.html \
             --clobber
-
-      - name: Bump version in podspec
-        run: |
-          sed -i "s/s\.version\s*=\s*'[^']*'/s.version          = '${{ github.event.client_payload.version }}'/" ActtraderCharts.podspec
-
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && echo "Nothing to commit, skipping." && exit 0
-          git commit -m "chore: update bundled chart.html to v${{ github.event.client_payload.version }}"
-
-      - name: Push to main
-        run: git push origin HEAD:main
-
-      - name: Tag release
-        run: |
+          git add -f Sources/ActtraderCharts/Resources/chart.html
+          git commit -m "release: bundle chart.html for v${{ github.event.client_payload.version }}"
           git tag "v${{ github.event.client_payload.version }}"
           git push origin "v${{ github.event.client_payload.version }}"

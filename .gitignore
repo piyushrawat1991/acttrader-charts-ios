@@ -14,8 +14,12 @@ xcuserdata/
 Pods/
 *.xcworkspace
 
+# Bundled chart.html — gitignored on main; force-added only on the release tag commit
+Sources/ActtraderCharts/Resources/chart.html
+
 # macOS
 .DS_Store
+**/.DS_Store
 
 # Test coverage
 *.profdata

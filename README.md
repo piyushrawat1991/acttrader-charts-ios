@@ -26,6 +26,24 @@ Or in Xcode: **File → Add Package Dependencies…** and enter the repo URL.
 pod 'ActtraderCharts', '~> 0.1'
 ```
 
+### Beta releases
+
+Pre-release builds are tagged as `vX.Y.Z-beta.N`. Both CocoaPods (`~>`) and SPM (`from:`) **exclude prereleases by default** — you must pin exactly to opt in.
+
+**SPM:**
+
+```swift
+.package(url: "https://github.com/piyushrawat1991/acttrader-charts-ios.git", exact: "1.1.0-beta.1")
+```
+
+**CocoaPods:**
+
+```ruby
+pod 'ActtraderCharts', '1.1.0-beta.1'
+```
+
+Existing dependency declarations using `from:` or `~>` continue to resolve only to stable releases.
+
 ## Usage
 
 ```swift

@@ -132,6 +132,7 @@ ActtraderChartsView.prewarm()
 | `tfcEnabled` | `Bool?` | `nil` (`true`) | Enable the TFC toggle button in the top bar. When `false`, TFC is completely disabled — the toggle button is hidden and all trade levels, draft orders, and the floating trade button are suppressed |
 | `showSettings` | `Bool?` | `nil` | Show the settings gear button in the top bar; set to `false` to hide it entirely |
 | `showFullscreenButton` | `Bool` | `false` | Show the fullscreen toggle button in the top bar. Hidden by default on mobile; set to `true` to surface it |
+| `showSnapshotButton` | `Bool?` | `nil` (`true`) | Show the snapshot (camera) button in the top bar. Opens a flyout with Download (saves to Photos via `UIImageWriteToSavedPhotosAlbum`) / Copy (to `UIPasteboard.general`). See *Snapshot setup* below |
 | `hideSymbolAndTick` | `Bool?` | `nil` | Hide the symbol name, OHLC strip, and tick-activity dot overlay |
 | `showBottomBar` | `Bool?` | `nil` | Show the bottom duration-selector bar (hidden by default) |
 | `timezone` | `String?` | `nil` (`"UTC"`) | IANA timezone string for time-axis and crosshair labels. `"UTC"` (default), `"local"` (device timezone), or any IANA string (`"America/New_York"`, `"Europe/London"`, etc.) |
@@ -320,9 +321,36 @@ chart.loadData(bars)
 | `onDataRequest` | Chart requests data for a time range — payload includes `requestId`, `from`, `to`, `timeframe`; call `resolveDataRequest` to respond |
 | `onSymbolClick` | User tapped the symbol name (requires `onSymbolClick: true` in `init`) |
 | `onError` | Engine error |
+| `onSnapshotResult` | Fired after a snapshot is saved to Photos or copied to the pasteboard. Signature: `(mode: String, filename: String, error: String?) -> Void`. `error` is `nil` on success |
 | `onBridgeEvent` | Generic fallback — every event including those with typed callbacks |
 
 > **`isFullscreen`** is `true` when the chart is in fullscreen mode at the time of the TFC action. Use it to gate toast notifications so they only appear while the chart is covering the full screen.
+
+## Snapshot setup
+
+The camera button in the chart's top bar lets users download or copy a PNG of
+the current chart view. The image is handled natively:
+
+- **Download** calls `UIImageWriteToSavedPhotosAlbum`. Your host app's
+  `Info.plist` **must** include an `NSPhotoLibraryAddUsageDescription` entry
+  explaining why Photos access is needed. Without it the save will silently fail
+  on iOS 14+.
+- **Copy** writes the image to `UIPasteboard.general.image` — no Info.plist
+  keys required.
+
+Observe the outcome via `onSnapshotResult`:
+
+```swift
+chart.onSnapshotResult = { mode, filename, error in
+    if let error {
+        print("Snapshot failed: \(error)")
+    } else {
+        print("\(mode) ok: \(filename)")
+    }
+}
+```
+
+Pass `showSnapshotButton: false` to the initialiser to hide the button entirely.
 
 ## Handling back / dismiss actions
 

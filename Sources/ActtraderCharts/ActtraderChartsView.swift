@@ -132,6 +132,10 @@ public class ActtraderChartsView: UIView {
         tfcEnabled: Bool? = nil,
         showSettings: Bool? = nil,
         showFullscreenButton: Bool = false,
+        /// Show the snapshot (camera) button in the top bar. Opens a flyout with
+        /// Download (saves to Photos) and Copy (to UIPasteboard) actions.
+        /// Defaults to `true` when `nil`.
+        showSnapshotButton: Bool? = nil,
         hideSymbolAndTick: Bool? = nil,
         showBottomBar: Bool? = nil,
         aggregateFrom: [String: String]? = nil,
@@ -228,6 +232,7 @@ public class ActtraderChartsView: UIView {
             tfcEnabled: tfcEnabled,
             showSettings: showSettings,
             showFullscreenButton: showFullscreenButton,
+            showSnapshotButton: showSnapshotButton,
             hideSymbolAndTick: hideSymbolAndTick,
             showBottomBar: showBottomBar,
             aggregateFrom: aggregateFrom,
@@ -351,6 +356,15 @@ public class ActtraderChartsView: UIView {
 
     /// Called when the chart engine reports an error.
     public var onError: ((BridgeEvent) -> Void)?
+
+    /// Called after a chart snapshot has been handled (saved to Photos or copied
+    /// to the system pasteboard). When the handler itself fails, `error` carries
+    /// the failure reason; on success it is `nil`.
+    ///
+    /// Snapshots are triggered by the camera button in the chart's top bar and
+    /// handled internally by ``ActtraderChartsView`` — this callback lets the
+    /// host react (toast, haptic, etc.) if desired.
+    public var onSnapshotResult: ((_ mode: String, _ filename: String, _ error: String?) -> Void)?
 
     /// Generic fallback — called for every event including those that have a typed callback.
     public var onBridgeEvent: ((BridgeEvent) -> Void)?
@@ -786,7 +800,47 @@ public class ActtraderChartsView: UIView {
             onUiStateChange?(event)
         case .dataRequest:         onDataRequest?(event)
         case .symbolClick:         onSymbolClick?(event)
+        case let .snapshot(mode, filename, _, base64, _, _, _):
+            handleSnapshot(mode: mode, filename: filename, base64: base64)
+        case .snapshotTaken:
+            break // success is signalled via onSnapshotResult from handleSnapshot
+        case let .snapshotError(mode, reason):
+            onSnapshotResult?(mode, "", reason)
         case .error:               onError?(event)
+        }
+    }
+
+    private func handleSnapshot(mode: String, filename: String, base64: String) {
+        guard let data = Data(base64Encoded: base64) else {
+            onSnapshotResult?(mode, filename, "base64-decode-failed")
+            return
+        }
+        guard let image = UIImage(data: data) else {
+            onSnapshotResult?(mode, filename, "image-decode-failed")
+            return
+        }
+
+        switch mode {
+        case "download":
+            // Requires NSPhotoLibraryAddUsageDescription in the host app's Info.plist.
+            UIImageWriteToSavedPhotosAlbum(image, self, #selector(photoSaveCompleted(_:didFinishSavingWithError:contextInfo:)), UnsafeMutableRawPointer(mutating: (filename as NSString).utf8String))
+        case "copy":
+            UIPasteboard.general.image = image
+            onSnapshotResult?(mode, filename, nil)
+        default:
+            onSnapshotResult?(mode, filename, "unknown-mode")
+        }
+    }
+
+    @objc private func photoSaveCompleted(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer?) {
+        let filename: String = {
+            guard let ptr = contextInfo else { return "" }
+            return String(cString: ptr.assumingMemoryBound(to: CChar.self))
+        }()
+        if let error {
+            onSnapshotResult?("download", filename, error.localizedDescription)
+        } else {
+            onSnapshotResult?("download", filename, nil)
         }
     }
 }

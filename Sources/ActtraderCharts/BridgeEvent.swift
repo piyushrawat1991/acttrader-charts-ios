@@ -112,6 +112,19 @@ public enum BridgeEvent {
     /// User tapped the symbol name; fires when `onSymbolClick` is enabled in the init command.
     case symbolClick(symbol: String)
 
+    /// User triggered a snapshot via the camera button. Contains the PNG as a
+    /// base64-encoded string. Handled internally by ``ActtraderChartsView``:
+    /// `download` saves to Photos, `copy` copies the image to `UIPasteboard.general`.
+    /// Hosts can observe the outcome via ``ActtraderChartsView/onSnapshotResult``.
+    case snapshot(mode: String, filename: String, mimeType: String, base64: String,
+                  symbol: String, timeframe: String, timestampMs: Int64)
+
+    /// Snapshot hand-off finished successfully on the web side.
+    case snapshotTaken(mode: String, filename: String, timestampMs: Int64)
+
+    /// Snapshot failed on the web side.
+    case snapshotError(mode: String, reason: String)
+
     /// An error occurred inside the chart engine.
     case error(message: String, code: String?)
 
@@ -348,6 +361,28 @@ public enum BridgeEvent {
 
         case "symbolClick":
             return .symbolClick(symbol: p["symbol"] as? String ?? "")
+
+        case "snapshot":
+            let mode      = p["mode"] as? String ?? ""
+            let filename  = p["filename"] as? String ?? "chart.png"
+            let mimeType  = p["mimeType"] as? String ?? "image/png"
+            let base64    = p["base64"] as? String ?? ""
+            let symbol    = p["symbol"] as? String ?? ""
+            let timeframe = p["timeframe"] as? String ?? ""
+            let tsMs: Int64 = (p["timestampMs"] as? Int64) ?? Int64(p["timestampMs"] as? Double ?? 0)
+            return .snapshot(mode: mode, filename: filename, mimeType: mimeType, base64: base64,
+                             symbol: symbol, timeframe: timeframe, timestampMs: tsMs)
+
+        case "snapshotTaken":
+            let mode = p["mode"] as? String ?? ""
+            let filename = p["filename"] as? String ?? ""
+            let tsMs: Int64 = (p["timestampMs"] as? Int64) ?? Int64(p["timestampMs"] as? Double ?? 0)
+            return .snapshotTaken(mode: mode, filename: filename, timestampMs: tsMs)
+
+        case "snapshotError":
+            let mode = p["mode"] as? String ?? ""
+            let reason = p["reason"] as? String ?? "unknown"
+            return .snapshotError(mode: mode, reason: reason)
 
         case "error":
             let message = p["message"] as? String ?? "Unknown error"

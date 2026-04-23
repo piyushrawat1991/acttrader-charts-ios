@@ -66,6 +66,8 @@ public enum BridgeCommand {
         showSettings: Bool?,
         /// Show the fullscreen toggle button in the top bar. Default: `false` on mobile (hidden).
         showFullscreenButton: Bool,
+        /// Show the snapshot (camera) button in the top bar. Default: `true`.
+        showSnapshotButton: Bool?,
         hideSymbolAndTick: Bool?,
         showBottomBar: Bool?,
         aggregateFrom: [String: String]?,
@@ -278,7 +280,7 @@ public enum BridgeCommand {
                              tradesThresholdForHorizontalLine, tradeDisplayFilter, positionRenderStyle,
                              hideLevelConfirmCancel, tradeLevelButtonScale,
                              levelClusteringEnabled, clusterThresholdDistance,
-                             tfcEnabled, showSettings, showFullscreenButton,
+                             tfcEnabled, showSettings, showFullscreenButton, showSnapshotButton,
                              hideSymbolAndTick, showBottomBar,
                              aggregateFrom, canvasColorsJson, themeOverridesJson, labelsJson,
                              uiConfigJson, durationTimeframeMap, onSymbolClick, timezone):
@@ -318,6 +320,7 @@ public enum BridgeCommand {
             if let tfcEnabled { payload["tfcEnabled"] = tfcEnabled }
             if let showSettings { payload["showSettings"] = showSettings }
             payload["showFullscreenButton"] = showFullscreenButton
+            if let showSnapshotButton { payload["showSnapshotButton"] = showSnapshotButton }
             if let hideSymbolAndTick { payload["hideSymbolAndTick"] = hideSymbolAndTick }
             if let showBottomBar { payload["showBottomBar"] = showBottomBar }
             if let aggregateFrom { payload["aggregateFrom"] = aggregateFrom }

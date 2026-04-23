@@ -66,8 +66,20 @@ public enum BridgeEvent {
     /// `newLots` is present when the user changed the lot size via the QTY pill flyout during this edit session.
     case tradeLevelEdit(label: String, type: String, data: String, isFullscreen: Bool, newLots: Double?, changes: [TradeLevelChange])
 
+    /// Live qty edit via the QTY pill flyout — fires before the level edit is confirmed,
+    /// so hosts can refresh Estimated PNL on SL/TP brackets in real time instead of
+    /// waiting for `tradeLevelEdit` at ✓ confirm. `type` is `"draft"` for the in-progress
+    /// draft order, otherwise the parent level's type. `previousLots` is the qty at
+    /// edit-session start (useful for revert-aware previews).
+    case tradeLevelQtyChange(label: String, type: String, newLots: Double, previousLots: Double, isFullscreen: Bool)
+
     /// Chart ✓ button confirmed an edit (including draft orders).
     case tradeLevelConfirmed(label: String, type: String, isFullscreen: Bool)
+
+    /// An in-progress level edit was cancelled from the chart (ESC key or inline ✕ cancel button).
+    /// Mirrors `tradeLevelConfirmed` for the revert path. Not fired for draft orders
+    /// (those emit `draftCancelled`). Hosts listen to reset their external modify-order panel.
+    case tradeLevelEditCancelled(label: String, type: String, isFullscreen: Bool)
 
     /// User tapped the pencil/edit button to open the order panel for a level.
     case tradeLevelEditOpen(label: String, type: String, data: String, price: Double, side: String?, stopLossPrice: Double?, takeProfitPrice: Double?, isFullscreen: Bool)
@@ -258,8 +270,24 @@ public enum BridgeEvent {
                 changes:      changes
             )
 
+        case "tradeLevelQtyChange":
+            return .tradeLevelQtyChange(
+                label:        p["label"]        as? String ?? "",
+                type:         p["type"]         as? String ?? "",
+                newLots:      p["newLots"]      as? Double ?? 0,
+                previousLots: p["previousLots"] as? Double ?? 0,
+                isFullscreen: p["isFullscreen"] as? Bool ?? false
+            )
+
         case "tradeLevelConfirmed":
             return .tradeLevelConfirmed(
+                label:        p["label"]        as? String ?? "",
+                type:         p["type"]         as? String ?? "",
+                isFullscreen: p["isFullscreen"] as? Bool ?? false
+            )
+
+        case "tradeLevelEditCancelled":
+            return .tradeLevelEditCancelled(
                 label:        p["label"]        as? String ?? "",
                 type:         p["type"]         as? String ?? "",
                 isFullscreen: p["isFullscreen"] as? Bool ?? false

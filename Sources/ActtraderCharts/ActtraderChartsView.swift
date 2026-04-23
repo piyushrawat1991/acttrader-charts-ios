@@ -308,8 +308,15 @@ public class ActtraderChartsView: UIView {
     /// Called when the user confirms edits to a trade level (main, SL, TP batched together).
     public var onTradeLevelEdit: ((BridgeEvent) -> Void)?
 
+    /// Called on every live qty edit via the QTY pill flyout — before the level edit is confirmed.
+    /// Use to refresh Estimated PNL for SL/TP brackets in real time.
+    public var onTradeLevelQtyChange: ((BridgeEvent) -> Void)?
+
     /// Called when the chart ✓ button confirms an edit (including draft orders).
     public var onTradeLevelConfirmed: ((BridgeEvent) -> Void)?
+
+    /// Called when an in-progress level edit is cancelled from the chart (ESC key or inline ✕ cancel button).
+    public var onTradeLevelEditCancelled: ((BridgeEvent) -> Void)?
 
     /// Called when the user taps the pencil/edit button to open the order panel for a level.
     public var onTradeLevelEditOpen: ((BridgeEvent) -> Void)?
@@ -766,7 +773,9 @@ public class ActtraderChartsView: UIView {
         case .tradeLevelClose:     onTradeLevelClose?(event)
         case .tradeLevelDrag:      onTradeLevelDrag?(event)
         case .tradeLevelEdit:      onTradeLevelEdit?(event)
+        case .tradeLevelQtyChange: onTradeLevelQtyChange?(event)
         case .tradeLevelConfirmed: onTradeLevelConfirmed?(event)
+        case .tradeLevelEditCancelled: onTradeLevelEditCancelled?(event)
         case .tradeLevelEditOpen:          onTradeLevelEditOpen?(event)
         case .tradeLevelBracketActivated:  onTradeLevelBracketActivated?(event)
         case .draftInitiated:              onDraftInitiated?(event)

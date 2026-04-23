@@ -253,6 +253,7 @@ chart.initialize(
 | | **Off-viewport indicators:** When a level's entry/SL/TP is outside the visible price range, a `▲ N` / `▼ N` pill appears near the chart's right edge. Tapping the pill smooth-scrolls the nearest off-screen marker to center. This is automatic — no configuration needed. |
 | | **Trade level visuals:** Pending orders and ES/EL entry working orders render as **dashed** lines tinted by side (`pendingBuyLine` green / `pendingSellLine` red). True open positions render as **solid** lines — green/red when `pnl` is set, otherwise `positionLine` (purple/indigo). Each true open position shows a colored entry-price tag on the right-side price axis (same style as the Bid/Ask tag). |
 | | **Brackets follow entry on drag:** dragging the entry line of a pending order, draft order, or an entry-editable open position translates any existing SL/TP brackets by the same price delta. The distance is whatever the user currently sees; if they manually adjust SL or TP, the new distance anchors subsequent entry drags. Missing brackets are not auto-created. On confirm, `onTradeLevelEdit` carries all translated fields together in one `changes` array; with `hideLevelConfirmCancel = true` the three changes arrive as a single atomic event. |
+| | **Bracket pill auto-offset:** when an SL/TP price sits within about one pill-height of the entry price, the bracket's label pill is pushed vertically away from the entry pill and connected back to its real price line by a dashed leader. The horizontal bracket line stays at the true price; only the pill and its `×` button move, and drag/tap targets follow the displaced pill — so the bracket pill and entry pill never share a touch area. Works for both buy and sell orders, automatic (no configuration). |
 | **TFC — Draft Orders** | |
 | `showDraftOrder(price:side:orderType:)` | Show a draggable limit or stop draft order line |
 | `showMarketDraft(price:side:)` | Show a non-draggable market-order preview line |
@@ -305,11 +306,13 @@ chart.loadData(bars)
 | `onStreamStatus` | Stream connection status changed |
 | `onPlaceOrder` | User submitted an order (requires `enableTrading`) |
 | `onTradeLevelEdit` | User confirmed a TFC level drag or bracket edit — payload includes `label`, `type`, `data`, `newLots?`, `changes[]` (each with `newLots?` on the `MAIN` change), `isFullscreen`. When qty was edited this session, the `lots` field embedded in `data` (and in the `MAIN` change's `data`) is overridden with the new value for convenience. |
+| `onTradeLevelQtyChange` | Live qty edit via the QTY pill flyout — fires before the edit is confirmed, so hosts can refresh Estimated PNL on SL/TP brackets in real time — payload includes `label`, `type` (`"draft"` for draft orders, otherwise parent level's type), `newLots`, `previousLots`, `isFullscreen` |
 | `onTradeLevelClose` | User tapped × on a level — payload includes `label`, `type`, `action`, `data`, `isFullscreen` |
 | `onTradeLevelDrag` | Live price during drag, fires on every move — payload includes `label`, `newPrice`, `bracketType?`, `data`, `isFullscreen` |
 | `onTradeLevelEditOpen` | User tapped the pencil button **or** (when `hideLevelConfirmCancel: true`) tapped a trade level line — payload includes `label`, `type`, `price`, `side?`, `stopLossPrice?`, `takeProfitPrice?`, `data`, `isFullscreen` |
 | `onTradeLevelBracketActivated` | SL/TP bracket auto-placed via `addLevelBracket` or `addBracket` — use the `price` to pre-populate your bracket price input — payload includes `label` (`""` for draft orders, OrderID string for existing levels), `bracketType`, `price`, `isFullscreen` |
 | `onTradeLevelConfirmed` | Chart ✓ button confirmed an edit — payload includes `label`, `type`, `isFullscreen` |
+| `onTradeLevelEditCancelled` | In-progress level edit aborted from the chart (ESC key or inline ✕ cancel button). Not fired for draft orders (see `onDraftCancelled`). Hosts listen to reset an external modify-order panel — payload includes `label`, `type`, `isFullscreen` |
 | `onDraftInitiated` | New draft order shown — payload includes `side`, `price`, `orderType`, `isFullscreen` |
 | `onDraftCancelled` | Draft order cancelled — payload includes `label`, `isFullscreen` |
 | `onTfcToggle` | TFC toggled on or off — payload includes `enabled: Bool` |

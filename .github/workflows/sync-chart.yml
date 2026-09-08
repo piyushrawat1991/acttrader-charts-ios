@@ -15,6 +15,15 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Check out with the PAT so the tag push below carries a non-Actions
+          # identity. GitHub deliberately does not trigger workflows for refs
+          # pushed with the default GITHUB_TOKEN, so publish.yml (`on: push:
+          # tags`) never fired for a tag this job created — no tests ran and no
+          # GitHub Release was cut for v1.3.0-beta.11, .12 or .14. The PAT was
+          # already a secret here, but only reached the `gh` CLI via GH_TOKEN,
+          # never `git push`.
+          token: ${{ secrets.CHARTS_REPO_PAT }}
 
       - name: Configure git identity
         run: |

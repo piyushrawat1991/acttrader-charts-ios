@@ -40,6 +40,12 @@ jobs:
             --output Sources/ActtraderCharts/Resources/chart.html \
             --clobber
           git add -f Sources/ActtraderCharts/Resources/chart.html
-          git commit -m "release: bundle chart.html for v${{ github.event.client_payload.version }}"
+          # --allow-empty: chart.html is meant to be gitignored on main, but if a
+          # copy ever lands there and matches the release asset byte for byte,
+          # `git commit` exits 1 with "nothing to commit" and the release dies
+          # before `git tag` — leaving npm and Android published while iOS has no
+          # tag for SPM/CocoaPods to resolve (v1.3.0-beta.13, run 34212403766).
+          # The tag commit must be created either way.
+          git commit --allow-empty -m "release: bundle chart.html for v${{ github.event.client_payload.version }}"
           git tag "v${{ github.event.client_payload.version }}"
           git push origin "v${{ github.event.client_payload.version }}"

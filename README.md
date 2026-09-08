@@ -212,6 +212,17 @@ For simple cases where you only need to set a specific timeframe (without full s
 
 Use `themeOverrides` (in the constructor) or `setThemeOverrides(_:)` to selectively override colors for each theme mode. Only the keys you supply are merged on top of the built-in dark/light themes.
 
+> **Canvas vs. chrome.** `themeOverrides` styles the whole chart — canvas *and* chrome
+> (top/bottom/left bars, dialogs, popovers). The colours a user picks in the in-chart
+> **Chart Settings** dialog are scoped to the canvas: `background`, `grid`, `axisText`,
+> `axisBorder` and `crosshair` repaint the canvas only, so a custom chart background no
+> longer repaints the toolbars and a custom axis-border colour no longer lands on the
+> settings dialog's own frame. Candle and volume picks still apply everywhere so legends
+> and indicator pills track them. Where a user picks a custom background but no explicit
+> axis-text colour, the symbol name and OHLC strip switch to pure white or pure black —
+> whichever contrasts with that background.
+
+
 ```swift
 // At init time
 let chart = ActtraderChartsView(
